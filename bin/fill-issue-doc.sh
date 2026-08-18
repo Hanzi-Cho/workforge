@@ -121,6 +121,8 @@ if n != 1:
 open(doc, "w", encoding="utf-8").write(new)
 
 issue["filled_at"] = datetime.datetime.now().isoformat(timespec="seconds")
+issue.setdefault("changelog", []).append(
+    {"at": issue["filled_at"][:10], "event": "AI 분석·수정 계획 작성"})
 m = re.search(r"Recommendation:\s*([A-Z_]+)", body)
 issue["recommendation"] = m.group(1) if m else None
 m = re.search(r"Confidence:\s*([0-9.]+)", body)

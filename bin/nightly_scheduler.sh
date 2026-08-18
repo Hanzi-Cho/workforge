@@ -72,8 +72,10 @@ mapfile -t TOUCHED < "$TOUCHED_FILE"
 log "    신규/변경 ${#TOUCHED[@]}건${TOUCHED:+: ${TOUCHED[*]}}"
 
 STAGE="table"
-log "2/5 테이블 렌더"
-"$BIN_DIR/render-table.sh"
+log "2/5 리포트 렌더(목록)"
+# 브리핑은 마지막에 한 번만. 여기서 붙이면 fill 후 다시 렌더하며 두 번 과금된다.
+# 그래도 여기서 목록은 만들어 둔다 — 이후 단계가 실패해도 읽을 리포트는 남는다.
+NO_BRIEFING=1 "$BIN_DIR/render-report.sh"
 
 if [[ -n "$SCAN_ONLY" ]]; then
   log "--scan-only — 여기서 멈춘다."
@@ -90,8 +92,12 @@ else
   log "5/5 AI 작성 (상한 $MAX_FILL_PER_RUN건)"
   "$BIN_DIR/fill-issue-doc.sh"
 
-  # 문서가 생기고 recommendation 이 붙었으니 테이블을 다시 렌더한다.
-  "$BIN_DIR/render-table.sh"
+  # fill 이 정본에 남긴 체인지로그를 문서에 반영한다.
+  # make-feature 는 AI 를 안 쓰고 멱등이라 다시 돌려도 공짜다.
+  "$BIN_DIR/make-feature.sh"
+
+  # 문서와 recommendation 이 붙은 뒤 브리핑까지 포함해 최종 렌더.
+  "$BIN_DIR/render-report.sh"
 fi
 
 STAGE="summary"
@@ -122,4 +128,4 @@ print(f"    오늘 누적 비용: ${today_cost:.2f}")
 PY
 
 trap - ERR
-log "완료 → $TABLE_MD"
+log "완료 → $REPORT_DIR/$DATE.md"

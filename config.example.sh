@@ -78,7 +78,7 @@ LOG_DIR="$JIRA_DIR/logs"
 PROJ_DIR="$JIRA_DIR/projects"
 
 ISSUES_JSON="$STATE_DIR/issues.json"     # 정본. 사람이 손으로 고치지 않는다.
-TABLE_MD="$JIRA_DIR/ISSUE_TABLE.md"      # 생성물. 사람이 읽는다.
+REPORT_DIR="$JIRA_DIR/reports"           # 생성물. reports/<날짜>.md 를 사람이 읽는다.
 LAST_RUN="$STATE_DIR/last-run.json"
 
 # cron 은 PATH 가 최소다. claude / node 를 명시적으로 넣는다.

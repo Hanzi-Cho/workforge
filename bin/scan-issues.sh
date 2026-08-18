@@ -129,8 +129,11 @@ if os.path.exists(store_p):
 
 now = datetime.datetime.now().isoformat(timespec="seconds")
 new_keys, changed_keys = [], []
+# 분류 결과·문서 상태·누적 이력은 스캔이 덮어쓰지 않는다.
 KEEP = ("first_seen", "kind", "feature", "feature_title",
-        "doc", "classified_at", "filled_at", "recommendation", "confidence")
+        "doc", "classified_at", "filled_at", "recommendation", "confidence",
+        "status_history", "changelog")
+today = now[:10]
 
 for it in items:
     k = it.get("key")
@@ -139,15 +142,39 @@ for it in items:
     prev = store.get(k)
     if prev is None:
         it.update(first_seen=now, last_synced=now, kind=None, feature=None,
-                  feature_title=None, doc=None, classified_at=None, filled_at=None)
+                  feature_title=None, doc=None, classified_at=None, filled_at=None,
+                  status_history=[{"at": today, "from": None, "to": it.get("status")}],
+                  changelog=[{"at": today, "event": "Jira 에서 신규 수집"}])
         store[k] = it
         new_keys.append(k)
     else:
         keep = {f: prev.get(f) for f in KEEP}
+        keep["status_history"] = keep.get("status_history") or []
+        keep["changelog"] = keep.get("changelog") or []
         changed = prev.get("updated") != it.get("updated")
+
+        # 상태 전이는 여기서만 기록한다. 리포트의 "검토 → 종결" 표기가 이걸 읽는다.
+        if prev.get("status") != it.get("status"):
+            keep["status_history"] += [{"at": today, "from": prev.get("status"),
+                                        "to": it.get("status")}]
+            keep["changelog"] += [{"at": today,
+                "event": f"상태 전이: {prev.get('status')} → {it.get('status')}"}]
+
         # 제목이 바뀌면 feature 판단 근거가 무너지므로 재분류 대상으로 되돌린다.
         if prev.get("summary") != it.get("summary"):
             keep["classified_at"] = None
+            keep["changelog"] += [{"at": today, "event": "제목 변경 — 재분류 대상"}]
+
+        # 본문이 새로 채워졌으면 다시 분석할 가치가 있다. 이게 이 도구의 최대 병목이다.
+        po = (prev.get("description") or "").strip()
+        no_ = (it.get("description") or "").strip()
+        if po != no_:
+            if not po and no_:
+                keep["filled_at"] = None
+                keep["changelog"] += [{"at": today, "event": "Jira 본문이 채워짐 — 재분석 대상"}]
+            else:
+                keep["changelog"] += [{"at": today, "event": "Jira 본문 변경"}]
+
         merged = dict(it); merged.update(keep); merged["last_synced"] = now
         merged.pop("gone_since", None)
         store[k] = merged

@@ -29,7 +29,12 @@ if want:
 else:
     targets = [i for i in store if not i.get("classified_at") and not i.get("gone_since")]
 
-feats = sorted({(i.get("project"), i.get("feature"), i.get("feature_title"))
+# None 이 섞이면 정렬할 때 str 과 비교하다 TypeError 로 죽는다.
+# feature_title 은 새 feature 일 때만 채워지므로 None 이 흔하다.
+# 이 버그는 feature 가 하나도 없는 첫 실행에서는 드러나지 않고
+# 두 번째 실행부터 터진다 — 반드시 빈 문자열로 정규화할 것.
+feats = sorted({(i.get("project") or "", i.get("feature") or "",
+                 i.get("feature_title") or "")
                 for i in store if i.get("feature")})
 with open(sys.argv[4], "w") as f:
     if feats:
