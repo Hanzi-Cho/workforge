@@ -26,13 +26,24 @@ store_p, out_p, site, date, sum_p = sys.argv[1:6]
 d = json.load(open(store_p))
 live = [i for i in d["issues"] if not i.get("gone_since")]
 
+# 본문·제목 변경은 status_history 가 아니라 changelog 에만 남는다.
+# 이걸 안 보면 "본문만 수정된 이슈"가 변경 절에서 누락돼 잔여로 밀린다.
+EDIT_MARKS = ("본문", "제목")
+
+def edits_today(i):
+    return [c for c in (i.get("changelog") or [])
+            if c.get("at") == date and any(m in str(c.get("event")) for m in EDIT_MARKS)]
+
 def line(i, transition=False):
-    """한 이슈 = 한 줄. 링크 · 제목 · (상태전이) · 파일경로."""
+    """한 이슈 = 한 줄. 링크 · 제목 · (상태전이/본문변경) · 파일경로."""
     seg = f"- [{i['key']}]({site}/browse/{i['key']}) {i.get('summary','').strip()}"
     if transition:
         tr = [h for h in (i.get("status_history") or []) if h["at"] == date and h.get("from")]
         if tr:
             seg += " — " + " → ".join([tr[0]["from"]] + [t["to"] for t in tr])
+        ed = edits_today(i)
+        if ed:
+            seg += " — " + "; ".join(c["event"] for c in ed)
     product = {"launcher": "런처", "fe": "FE", "planner": "플래너"}.get(
         i.get("product"), "분류 확인 필요")
     versions = ", ".join(i.get("fix_versions") or []) or "릴리즈 미배정"
@@ -42,7 +53,8 @@ def line(i, transition=False):
 new  = [i for i in live if (i.get("first_seen") or "")[:10] == date]
 newk = {i["key"] for i in new}
 chg  = [i for i in live if i["key"] not in newk
-        and any(h["at"] == date for h in (i.get("status_history") or []) if h.get("from"))]
+        and (any(h["at"] == date for h in (i.get("status_history") or []) if h.get("from"))
+             or edits_today(i))]
 chgk = {i["key"] for i in chg}
 rest = [i for i in live if i["key"] not in newk and i["key"] not in chgk]
 

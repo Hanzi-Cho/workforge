@@ -174,8 +174,13 @@ for i in d["issues"]:
         "HISTORY": "## 상태 이력\n\n| 날짜 | 전이 |\n|---|---|\n" + "\n".join(
             f"| {h['at']} | {h.get('from') or '(등록)'} → {h.get('to')} |" for h in hist),
         "SOURCE": "## Jira 원문\n\n" + desc,
-        "CHANGELOG": "## 체인지로그\n\n| 날짜 | 내용 |\n|---|---|\n" + "\n".join(
-            f"| {c['at']} | {c.get('event')} |" for c in clog),
+        # 표는 한 줄 요약만. 실제 변경분(diff)은 표를 깨지 않게 접이식 블록으로 뒤에 붙인다.
+        "CHANGELOG": ("## 체인지로그\n\n| 날짜 | 내용 |\n|---|---|\n" + "\n".join(
+            f"| {c['at']} | {c.get('event')} |" for c in clog)
+            + "".join(
+                f"\n\n<details>\n<summary>{c['at']} · {c.get('event')}</summary>\n\n"
+                f"```diff\n{c['diff']}\n```\n\n</details>"
+                for c in clog if c.get("diff"))),
     }
     txt = rebuild(txt, f"{key} {i.get('summary') or ''}".strip(), machine)
 
