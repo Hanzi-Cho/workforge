@@ -44,6 +44,10 @@ MODEL_FILL="${MODEL_FILL:-sonnet}"      # 가장 비싼 단계
 # 한 번의 실행에서 문서를 채울 이슈 최대 개수. 나머지는 다음 실행으로 넘어간다.
 MAX_FILL_PER_RUN="${MAX_FILL_PER_RUN:-5}"
 
+# 한 번의 실행에서 **본문까지** 상세 수집할 이슈 최대 개수.
+# 스캔은 2단계다: (A) 키+updated 만 훑어 변경분을 가려내고 (B) 변경분만 본문 수집.
+MAX_DETAIL_PER_RUN="${MAX_DETAIL_PER_RUN:-12}"
+
 # 단계별 타임아웃(초)
 TIMEOUT_SCAN="${TIMEOUT_SCAN:-600}"
 TIMEOUT_CLASSIFY="${TIMEOUT_CLASSIFY:-420}"
