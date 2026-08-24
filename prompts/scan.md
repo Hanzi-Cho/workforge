@@ -7,7 +7,7 @@
 
 - cloudId: `__CLOUD_ID__`
 - jql: `__JQL__`
-- fields: `["key","summary","description","status","issuetype","priority","project","components","labels","updated","created","parent"]`
+- fields: `["key","summary","description","status","issuetype","priority","project","components","labels","fixVersions","updated","created","parent"]`
 - maxResults: `50`
 - responseContentFormat: `markdown`
 
@@ -49,6 +49,7 @@
       "project": "PROJ",
       "components": ["..."],
       "labels": ["..."],
+      "fix_versions": ["..."],
       "parent": "PROJ-100",
       "updated": "2026-08-14T09:14:24.487+0900",
       "created": "2026-08-01T10:00:00.000+0900"
@@ -63,4 +64,5 @@
   비어 있으면 `null` 로 두어라. 제목으로 추측해 채우지 마라.
 - `project` 는 프로젝트 키(`DE`, `EST` 등)만.
 - `issuetype` / `status` / `priority` 는 Jira 표기 그대로(한국어면 한국어로).
+- `fix_versions` 는 Jira Fix Version 이름의 배열이다. 비어 있으면 `[]` 로 둔다.
 - 없는 필드는 `null`. 값을 발명하지 마라.

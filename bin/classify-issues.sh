@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 분류가 안 된 이슈를 AI 로 판정해 정본에 기록한다(kind / feature).
+# 분류가 안 된 이슈를 AI 로 판정해 정본에 기록한다(kind / product / feature).
 # 키를 인자로 주면 그 이슈만, 없으면 classified_at 이 비어있는 것 전부.
 #
 #   classify-issues.sh            미분류 전부
@@ -27,7 +27,10 @@ want = {l.strip() for l in open(sys.argv[2]) if l.strip()}
 if want:
     targets = [i for i in store if i["key"] in want]
 else:
-    targets = [i for i in store if not i.get("classified_at") and not i.get("gone_since")]
+    # 제품 분류는 이 기능이 도입되기 전 이슈에도 필요하다. 기존 kind/feature 가
+    # 있어도 product 가 비어 있으면 한 번만 다시 분류한다.
+    targets = [i for i in store if (not i.get("classified_at") or not i.get("product"))
+               and not i.get("gone_since")]
 
 # None 이 섞이면 정렬할 때 str 과 비교하다 TypeError 로 죽는다.
 # feature_title 은 새 feature 일 때만 채워지므로 None 이 흔하다.
@@ -45,7 +48,7 @@ with open(sys.argv[4], "w") as f:
 
 slim = [{k: i.get(k) for k in
          ("key", "summary", "description", "issuetype", "status",
-          "project", "components", "labels", "parent")} for i in targets]
+          "project", "components", "labels", "fix_versions", "parent")} for i in targets]
 json.dump(slim, open(sys.argv[3], "w"), ensure_ascii=False, indent=1)
 print(len(targets))
 PY
@@ -78,6 +81,7 @@ d = json.load(open(sys.argv[2]))
 now = datetime.datetime.now().isoformat(timespec="seconds")
 
 VALID = {"bug", "improvement", "feature", "task", "unknown"}
+VALID_PRODUCT = {"launcher", "fe", "planner", "unknown"}
 applied = skipped = 0
 for i in d["issues"]:
     r = res.get(i["key"])
@@ -89,6 +93,11 @@ for i in d["issues"]:
         skipped += 1
         continue
     i["kind"] = kind
+    product = r.get("product")
+    if product not in VALID_PRODUCT:
+        print(f"  !! {i['key']}: 알 수 없는 product={product!r} — unknown 처리", file=sys.stderr)
+        product = "unknown"
+    i["product"] = product
     i["feature"] = r.get("feature") or None
     if r.get("feature_title"):
         i["feature_title"] = r["feature_title"]
@@ -105,6 +114,6 @@ json.dump(d, open(sys.argv[2], "w"), ensure_ascii=False, indent=1)
 print(f"분류 반영 {applied}건 (건너뜀 {skipped})", file=sys.stderr)
 for i in d["issues"]:
     if res.get(i["key"]) and i.get("classified_at") == now:
-        print(f"  {i['key']:10} {i['kind']:12} {i.get('feature') or '_inbox'}",
+        print(f"  {i['key']:10} {i['product']:8} {i['kind']:12} {i.get('feature') or '_inbox'}",
               file=sys.stderr)
 PY

@@ -20,6 +20,14 @@ __ISSUES_JSON__
 
 각 이슈마다:
 
+**`product`** — 다음 중 하나로만. 이 값은 Jira 프로젝트 키와 다르다.
+- `launcher` — React Native Android launcher
+- `fe` — 런처 WebView 위 React frontend
+- `planner` — Kotlin native planner app
+- `unknown` — 제목·본문·Component·label·parent로 근거를 찾을 수 없다.
+
+`components`와 `labels`를 가장 먼저 보고, 그 다음 제목·본문·parent를 근거로 한다. Jira 프로젝트 키 `DE`/`EST`만 보고 제품을 단정하지 마라. 복수 제품이 명확히 걸린 경우에는 주된 구현 소유 제품 하나를 고르고, rationale에 연관 제품을 적어라.
+
 **`kind`** — 다음 중 하나로만.
 - `bug` — 기존 동작이 명세/기대와 다르게 동작한다.
 - `improvement` — 동작은 정상이나 더 낫게 바꾸는 것(UX, 성능, 정렬 방식 등).
@@ -46,6 +54,7 @@ Jira 의 `issuetype` 은 참고만 하라. 실제 본문과 어긋나면 본문�
 [
   {
     "key": "PROJ-123",
+    "product": "launcher",
     "kind": "bug",
     "feature": "network-status",
     "feature_title": "네트워크 상태 화면",
@@ -56,5 +65,5 @@ Jira 의 `issuetype` 은 참고만 하라. 실제 본문과 어긋나면 본문�
 ]
 ```
 
-`rationale` 은 한 줄. 왜 그 kind 와 feature 로 판정했는지만.
-본문이 없는 이슈는 `"rationale": "본문 없음 — 판단 불가"` 로 쓰고 `feature: null`.
+`rationale` 은 한 줄. 왜 그 product/kind/feature 로 판정했는지만.
+본문이 없는 이슈는 `"rationale": "본문 없음 — 제품·기능 판단 불가"` 로 쓰고 `product: "unknown"`, `feature: null`.

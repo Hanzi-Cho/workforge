@@ -33,6 +33,10 @@ def line(i, transition=False):
         tr = [h for h in (i.get("status_history") or []) if h["at"] == date and h.get("from")]
         if tr:
             seg += " — " + " → ".join([tr[0]["from"]] + [t["to"] for t in tr])
+    product = {"launcher": "런처", "fe": "FE", "planner": "플래너"}.get(
+        i.get("product"), "분류 확인 필요")
+    versions = ", ".join(i.get("fix_versions") or []) or "릴리즈 미배정"
+    seg += f" — [{product} · {versions}]"
     return seg + f" — `{i.get('doc') or '(문서 없음)'}`"
 
 new  = [i for i in live if (i.get("first_seen") or "")[:10] == date]
@@ -55,7 +59,8 @@ open(out_p, "w", encoding="utf-8").write("\n".join(L) + "\n")
 # 브리핑에 넘길 요약 — 판단에 필요한 것만, 목록 전체를 넘기지 않는다.
 def slim(items, n=12):
     return [{"key": i["key"], "summary": i.get("summary"), "kind": i.get("kind"),
-             "feature": i.get("feature"), "status": i.get("status"),
+             "product": i.get("product"), "feature": i.get("feature"),
+             "fix_versions": i.get("fix_versions") or [], "status": i.get("status"),
              "has_desc": bool((i.get("description") or "").strip()),
              "recommendation": i.get("recommendation")} for i in items[:n]]
 from collections import Counter
@@ -66,6 +71,9 @@ json.dump({
     "total_open": len(live),
     "by_feature": dict(Counter(f"{i.get('project')}/{i.get('feature') or '_inbox'}"
                                for i in live).most_common(8)),
+    "by_product": dict(Counter(i.get("product") or "unknown" for i in live)),
+    "by_release": dict(Counter(", ".join(i.get("fix_versions") or []) or "unassigned"
+                                for i in live)),
     "recommendations": dict(Counter(i.get("recommendation") for i in live
                                     if i.get("recommendation"))),
     "new_issues": slim(sorted(new, key=bykey)),
