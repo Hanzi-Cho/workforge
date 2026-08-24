@@ -1,0 +1,71 @@
+# 런처 · FE · 플래너 릴리즈 일감 운영
+
+## 목적
+
+이 저장소는 기존의 **Jira 읽기 전용 야간 수집**을 유지하면서, 사람이 "일감 생성"이라고 지시했을 때 접수 이슈를 릴리즈 가능한 실행 단위로 바꾸기 위한 운영 규칙을 제공한다.
+
+아침 리포트는 판단 자료일 뿐 Jira를 바꾸지 않는다. Jira Version·Epic·작업 이슈를 만드는 행위는 오직 명시적인 일감 생성 요청에서만 한다.
+
+## 현재 관찰과 권장 구조
+
+현재 수집 범위는 Jira 프로젝트 키 `DE`, `EST` 두 개다. `DE`에는 런처 성격 이슈가 집중돼 있지만, `EST`에는 플래너와 기존 Blaster 계열 이슈가 섞여 있다. 따라서 **Jira 프로젝트 키만으로 런처·FE·플래너를 고정 매핑하면 오분류가 생긴다.**
+
+우선 다음의 제품 Component를 Jira에 표준화한다.
+
+| Component | 제품 | 저장소 |
+| --- | --- | --- |
+| `launcher` | React Native Android launcher | `REPO_MAP[launcher]` |
+| `fe` | 런처 WebView React frontend | `REPO_MAP[fe]` |
+| `planner` | Kotlin native app | `REPO_MAP[planner]` |
+
+실제 저장소 경로는 `config.sh` 의 `REPO_MAP` 에만 둔다(이 파일은 gitignore 대상).
+경로를 문서에 적으면 공개 저장소에 사용자명과 로컬 배치가 그대로 남는다.
+
+FE 전용 Jira 프로젝트 키는 현재 수집 데이터에서 확인되지 않았다. 별도 프로젝트를 새로 만들기 전에는 `component = fe`로 분리하고, 제품별 저장 필터/보드를 만든다. 이 방식은 과거 이슈의 키·링크·히스토리를 보존한다.
+
+## Jira 계층
+
+Jira의 Version은 이슈 계층의 부모가 아니므로 다음 두 축을 함께 쓴다.
+
+```text
+Fix Version: launcher-v0.0.8        ← 릴리즈 단위 필터·버전 화면
+└─ Epic: [런처] launcher-v0.0.8 릴리즈
+   ├─ Bug / Story / Task             ← 모두 같은 Fix Version + component=launcher
+   │  └─ Sub-task                    ← 실제로 더 쪼개야 할 실행 단위만
+   └─ ...
+```
+
+- 한 브라우저 화면: 제품별 저장 필터 `component = launcher AND fixVersion = "launcher-v0.0.8"`처럼 연다. 상태별/담당자별 quick filter를 추가한다.
+- 접수 이슈는 원본으로 보존한다. 실행 이슈는 원본에 `is implemented by` 또는 `relates to` 링크를 둔다.
+- 한 접수 이슈가 여러 제품에 걸치면 제품별 작업을 생성하고 서로 `blocks`/`is blocked by`로 순서를 연결한다.
+
+## 버전 선택 규칙
+
+1. Jira에서 제품 Component에 대응하는 미릴리즈 Fix Version과 릴리즈 Epic을 먼저 찾는다. 하나가 명확하면 재사용한다.
+2. 없으면 해당 제품 저장소에서 현재 브랜치, HEAD, dirty 여부, HEAD에서 도달 가능한 최신 릴리즈 태그를 읽는다. Git을 변경하지 않는다.
+3. 태그 표기법은 저장소별로 유지한다. 현재 확인된 기준은 런처 `v0.0.7-alpha.2`, FE `v0.1.5`, 플래너 `release_v2.0.9`다.
+4. 기본 증분은 버그=patch, 호환 기능·개선=minor, 호환성 파괴=major다. `next-*`, hotfix, alpha/rc 브랜치와 기존 Jira 미릴리즈가 명확하면 그 흐름을 우선한다.
+5. dirty 작업 트리는 릴리즈 번호 산정 근거로 쓰지 않는다. 활성 Jira 릴리즈가 있으면 거기에 배정하고, 없으면 마지막 태그를 기준으로 Jira 계획 버전만 만든다.
+
+Jira Version 생성은 계획 메타데이터일 뿐 Git 태그·릴리즈 브랜치·배포를 만들지 않는다.
+
+## MCP 쓰기 기능 확인
+
+현재 WSL Claude Code의 `atlassian` 연결은 정상이며 야간 수집의 이슈 검색/조회는 검증돼 있다. 반면 이 저장소의 허용 목록에는 아직 읽기 도구만 명시돼 있어, Version 생성·이슈 생성/수정·이슈 링크 생성은 **첫 실제 일감 생성 전에 도구 이름과 권한을 확인해야 한다.**
+
+Codex 런타임에는 이 Jira MCP가 직접 노출돼 있지 않다. 따라서 자동 일감 생성의 실행 경로는 WSL Claude Code MCP를 호출하는 래퍼이거나, Codex에 연결한 Jira 커넥터여야 한다. 그 경로가 Version 생성 기능을 제공하지 않으면 Jira REST 권한 또는 Version 관리 기능이 있는 커넥터를 추가한다. 기능이 없는 상태에서 Version을 만들었다고 보고하거나, Git 태그 생성으로 우회하지 않는다.
+
+## "일감 생성" 실행 계약
+
+1. 접수 이슈의 요구·상태·중복/연관 이슈를 읽는다.
+2. 제품, 작업 종류, 수용 기준, 테스트/검증 기준을 작성한다. 정보 부족도 하나의 명시적 작업으로 기록한다.
+3. Git 릴리즈 상태와 Jira 미릴리즈 Version/Epic을 대조해 재사용 또는 다음 Version 생성을 결정한다.
+4. Version → 릴리즈 Epic → 실행 이슈 → 필요한 Sub-task 순으로 Jira에 만든다.
+5. 이슈마다 `Component`, `Fix Version`, 릴리즈 Epic, 원본 Jira 링크를 빠뜨리지 않는다.
+6. 최종 응답에는 제품별 Jira 키·Version·Epic·원본 이슈와, 새로 만든 항목/재사용한 항목을 표로 제시한다.
+
+## 운영 안전선
+
+- 야간 수집과 아침 브리핑은 Jira 읽기 전용이다.
+- "일감 생성"은 Jira 메타데이터 변경만 허용한다. Git 작업 트리, 태그, 브랜치, 배포는 이 흐름에서 변경하지 않는다.
+- 제품 분류나 버전 체계가 불명확한 경우에도 접수 이슈를 버리지 않는다. `분류 확인 필요` 또는 `정보 보완 필요` 작업을 만든 뒤, 확정되지 않은 가정은 결과에 명시한다.
