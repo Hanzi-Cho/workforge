@@ -48,31 +48,47 @@ run_ai() {
     mcp_args=("${NO_MCP[@]}")       # Jira 불필요 → MCP 제거
   fi
 
-  if ! timeout "$to" claude -p \
+  # 종료코드는 `if ! cmd` 안에서 잡으면 안 된다. `! cmd` 가 성공(0)으로 뒤집혀
+  # then 블록의 $? 가 항상 0 이 되고, 타임아웃의 124 가 사라진다.
+  # (2026-08-24: 이 버그로 DE 스캔 타임아웃이 "exit=0" 으로 찍혀 원인 추적이 막혔다.)
+  local code=0
+  timeout "$to" claude -p \
         --model "$model" \
         --allowedTools "${READ_TOOLS[@]}" "${extra[@]}" \
         "${READONLY_DENY[@]}" \
         "${mcp_args[@]}" \
         --output-format json \
-        < "$prompt" > "$env_json"
-  then
-    local code=$?
+        < "$prompt" > "$env_json" || code=$?
+
+  if (( code != 0 )); then
     # 진단용으로 남긴다. 지워버리면 왜 실패했는지 알 수 없다.
     local keep="$STATE_DIR/.failed.$(basename "$prompt").json"
     mv -f "$env_json" "$keep" 2>/dev/null || true
     log "claude 실행 실패 (exit=$code, timeout=${to}s, prompt=$(basename "$prompt"))"
     log "  진단: $keep"
-    python3 - "$keep" 2>/dev/null <<'PY' || true
+    # `--output-format json` 은 JSON 을 맨 끝에 한 번만 뱉는다. timeout 이
+    # SIGTERM 으로 죽이면 파일은 0바이트가 되므로, 빈 파일 자체가 증거다.
+    if [[ ! -s "$keep" ]]; then
+      if (( code == 124 )); then
+        log "    진단: 출력 없음 + exit=124 → ${to}s 타임아웃으로 강제 종료됐다."
+        log "    → 이 단계가 예산 안에 못 끝난다. 프롬프트 작업량을 줄이거나 타임아웃을 올려라."
+      else
+        log "    진단: 출력이 비어있다 (exit=$code). claude 가 JSON 을 내기 전에 죽었다."
+      fi
+    else
+      python3 - "$keep" 2>/dev/null <<'PY' || true
 import json, sys
 try: d = json.load(open(sys.argv[1]))
-except Exception: sys.exit()
+except Exception:
+    print("    진단: JSON 파싱 불가 — 출력이 잘렸다", file=sys.stderr); sys.exit()
 for k in ("is_error", "terminal_reason", "subtype", "num_turns",
           "api_error_status", "stop_reason"):
     if d.get(k) is not None:
         print(f"    {k}: {d[k]}", file=sys.stderr)
 print(f"    result: {str(d.get('result'))[:400]}", file=sys.stderr)
 PY
-    return "${code:-1}"
+    fi
+    return "$code"
   fi
 
   python3 - "$env_json" "$STATE_DIR/cost.log" "$(basename "$prompt")" <<'PY'
