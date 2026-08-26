@@ -51,8 +51,10 @@ fi
 
 COMBINED="$STATE_DIR/.scan.combined.json"   # Phase B 상세 레코드 (정본 갱신용)
 SEEN="$STATE_DIR/.scan.seen.json"           # Phase A 전체 키 (이탈 판정용)
+RELMETA="$STATE_DIR/.scan.releases.json"    # Phase B 에서 본 Fix Version 메타
 echo '[]' > "$COMBINED"
 echo '{}' > "$SEEN"
+echo '{}' > "$RELMETA"
 OK_PROJECTS=()
 FAILED_PROJECTS=()
 DETAIL_BUDGET="$MAX_DETAIL_PER_RUN"
@@ -189,9 +191,9 @@ PY
   json_from_ai "$STATE_DIR/.detail.$P.raw" > "$STATE_DIR/.detail.$P.json" || {
     log "[$P] Phase B JSON 파싱 실패 — 건너뜀"; FAILED_PROJECTS+=("$P"); continue; }
 
-  if ! python3 - "$STATE_DIR/.detail.$P.json" "$STATE_DIR/.targets.$P" "$P" "$COMBINED" <<'PY'
+  if ! python3 - "$STATE_DIR/.detail.$P.json" "$STATE_DIR/.targets.$P" "$P" "$COMBINED" "$RELMETA" <<'PY'
 import json, sys
-det_p, targets_p, proj, comb_p = sys.argv[1:5]
+det_p, targets_p, proj, comb_p, rel_p = sys.argv[1:6]
 want = [k for k in open(targets_p).read().split("\n") if k.strip()]
 det = json.load(open(det_p))
 items = det.get("issues", [])
@@ -206,6 +208,24 @@ if extra:
 comb = json.load(open(comb_p))
 comb.extend(items)
 json.dump(comb, open(comb_p, "w"), ensure_ascii=False)
+
+# Fix Version 메타(released 여부)를 모은다. 릴리스 포커스 판정의 유일한 근거다.
+# AI 가 `releases` 를 안 냈으면 이슈의 fix_versions 이름만으로라도 채운다 —
+# released 는 모르는 채(null) 남고, 뒤 단계는 그걸 "미릴리즈로 간주" 로 다룬다.
+rel = json.load(open(rel_p))
+for v in det.get("releases") or []:
+    name = (v or {}).get("name")
+    if not name:
+        continue
+    rel[f"{v.get('project') or proj}|{name}"] = {
+        "project": v.get("project") or proj, "name": name,
+        "released": v.get("released"), "release_date": v.get("release_date")}
+for it in items:
+    for name in it.get("fix_versions") or []:
+        rel.setdefault(f"{proj}|{name}",
+                       {"project": proj, "name": name,
+                        "released": None, "release_date": None})
+json.dump(rel, open(rel_p, "w"), ensure_ascii=False)
 print(f"[{proj}] 본문 검증 통과 {len(items)}/{len(want)}건", file=sys.stderr)
 PY
   then
@@ -229,15 +249,27 @@ fi
 # ── 병합 ────────────────────────────────────────────────────────────────
 # 분류 결과(kind/feature/product)와 문서 상태는 보존한다. 매일 다시 판단하면
 # 분류가 흔들리고(어제 network-status, 오늘 net-ui) 비용도 두 번 낸다.
-python3 - "$COMBINED" "$ISSUES_JSON" "$MODE" "${OK_PROJECTS[*]}" "$SEEN" <<'PY'
+python3 - "$COMBINED" "$ISSUES_JSON" "$MODE" "${OK_PROJECTS[*]}" "$SEEN" "$RELMETA" <<'PY'
 import json, os, sys, datetime, difflib
-comb_p, store_p, mode, ok_projects, seen_p = sys.argv[1:6]
+comb_p, store_p, mode, ok_projects, seen_p, rel_p = sys.argv[1:7]
 scanned = set(ok_projects.split())
 items = json.load(open(comb_p))          # Phase B 상세 = 신규/변경분만
 seen = json.load(open(seen_p))           # Phase A 전체 목록
 store = {}
+releases = {}
 if os.path.exists(store_p):
-    store = {i["key"]: i for i in json.load(open(store_p))["issues"]}
+    prev_doc = json.load(open(store_p))
+    store = {i["key"]: i for i in prev_doc["issues"]}
+    releases = prev_doc.get("releases") or {}
+
+# 릴리스 메타는 **누적**한다. Phase B 는 바뀐 이슈만 보므로, 오늘 아무 이슈도
+# 안 바뀐 릴리스는 이번 응답에 안 나온다. 지우면 그 릴리스가 판정에서 사라진다.
+# 단 released=true 로 바뀐 것은 갱신돼야 하므로, 값이 있는 쪽이 이긴다.
+for k, v in json.load(open(rel_p)).items():
+    old = releases.get(k) or {}
+    if v.get("released") is None and old.get("released") is not None:
+        v = dict(v, released=old["released"], release_date=old.get("release_date"))
+    releases[k] = v
 
 now = datetime.datetime.now().isoformat(timespec="seconds")
 new_keys, changed_keys = [], []
@@ -279,6 +311,15 @@ for it in items:
                                         "to": it.get("status")}]
             keep["changelog"] += [{"at": today,
                 "event": f"상태 전이: {prev.get('status')} → {it.get('status')}"}]
+
+        # Fix Version 배정은 이 도구의 조직 축이다. 바뀌면 리포트에 올려야 한다.
+        # (릴리스에 새로 들어왔는지/빠졌는지를 사람이 아침에 바로 봐야 한다.)
+        pv = list(prev.get("fix_versions") or [])
+        nv = list(it.get("fix_versions") or [])
+        if pv != nv:
+            keep["changelog"] += [{"at": today,
+                "event": f"릴리스 배정 변경: {', '.join(pv) or '(없음)'}"
+                         f" → {', '.join(nv) or '(없음)'}"}]
 
         # 제목이 바뀌면 feature 판단 근거가 무너지므로 재분류 대상으로 되돌린다.
         if prev.get("summary") != it.get("summary"):
@@ -331,6 +372,7 @@ if mode == "full":
 
 out = {"generated_at": now, "last_scan_mode": mode,
        "scanned_projects": sorted(scanned),
+       "releases": releases,
        "issues": sorted(store.values(),
                         key=lambda i: i.get("updated") or "", reverse=True)}
 json.dump(out, open(store_p, "w"), ensure_ascii=False, indent=1)

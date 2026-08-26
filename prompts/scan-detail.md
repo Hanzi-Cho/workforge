@@ -44,6 +44,14 @@ __TARGET_KEYS__
 {
   "pages_fetched": <MCP 호출 횟수>,
   "truncated": <bool>,
+  "releases": [
+    {
+      "project": "PROJ",
+      "name": "proj-v0.0.8",
+      "released": false,
+      "release_date": null
+    }
+  ],
   "issues": [
     {
       "key": "PROJ-123",
@@ -72,4 +80,9 @@ __TARGET_KEYS__
 - `project` 는 프로젝트 키(`DE`, `EST` 등)만.
 - `issuetype` / `status` / `priority` 는 Jira 표기 그대로(한국어면 한국어로).
 - `fix_versions` 는 Jira Fix Version 이름의 배열이다. 비어 있으면 `[]` 로 둔다.
+- `releases` 는 위 이슈들에 붙어 있던 Fix Version 을 **중복 없이** 모은 목록이다.
+  응답의 `fields.fixVersions[]` 원소에 `released` / `releaseDate` 가 함께 들어 있다.
+  그 값을 그대로 옮겨라. 어느 이슈에도 Fix Version 이 없으면 `[]` 로 둔다.
+  이 목록으로 스크립트가 "지금 진행 중인 릴리스" 를 판정한다.
+  `released` 를 추측해서 채우지 마라 — 응답에 없으면 `null` 로 두면 된다.
 - 없는 필드는 `null`. 값을 발명하지 마라.
