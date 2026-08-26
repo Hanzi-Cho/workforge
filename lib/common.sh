@@ -4,6 +4,40 @@
 log() { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" >&2; }
 die() { log "!! $*"; exit 1; }
 
+# ── Windows 저장소 다루기 ───────────────────────────────────────────────
+# winpath — WSL 경로를 Windows 표기로. /mnt/d/x → D:/x
+winpath() {
+  local p="$1"
+  if [[ "$p" =~ ^/mnt/([a-zA-Z])(/.*)?$ ]]; then
+    printf '%s:%s' \
+      "$(tr '[:lower:]' '[:upper:]' <<<"${BASH_REMATCH[1]}")" \
+      "${BASH_REMATCH[2]:-/}"
+  else
+    printf '%s' "$p"
+  fi
+}
+
+# git_win <저장소경로> <git 인자...> — /mnt/d 저장소는 반드시 이걸로 다룬다.
+#
+# 실측(2026-08-26, blaster-launcher):
+#   WSL git 은 워킹트리를 "187개 파일 수정" 으로 본다. 같은 시점에 git.exe 는
+#   clean 으로 본다. 원인은 Windows git 의 global core.autocrlf=true —
+#   체크아웃은 CRLF 로 됐는데 WSL git 은 autocrlf 가 없어 LF 블롭과 비교한다.
+#   `git diff --ignore-cr-at-eol` 로 세어보면 실제 변경은 0건이다.
+#
+#   이 유령 변경 때문에 WSL git 으로는 머지·체크아웃이 거부된다. 억지로
+#   밀어붙이면(checkout -- . / reset --hard) 187개 파일이 LF 로 덮어써져
+#   Windows 쪽 빌드와 diff 가 전부 깨진다. 그래서 쓰기 작업은 git.exe 로만 한다.
+#
+#   워크트리도 같다. git.exe 가 만든 워크트리의 gitdir 는 `D:/...` 표기라
+#   WSL 의 `git worktree list` 에 prunable 로 나온다. **정상이다.**
+#   여기서 prune 을 돌리면 살아있는 워크트리의 등록이 날아간다.
+git_win() {
+  local repo="$1"; shift
+  [[ -x "$GIT_WIN" ]] || die "Windows git 을 찾을 수 없다: $GIT_WIN (config.sh 의 GIT_WIN)"
+  "$GIT_WIN" -C "$(winpath "$repo")" "$@"
+}
+
 # ── claude 호출 가드 ────────────────────────────────────────────────────
 # 아래 3개는 모두 실측으로 확인한 동작이다(2026-08-14, claude 2.1.232).
 #

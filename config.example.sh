@@ -71,6 +71,65 @@ declare -A REPO_MAP=(
   # [PROJ]="/path/to/frontend /path/to/backend /path/to/mobile"
 )
 
+# ── 릴리스 포커스 ───────────────────────────────────────────────────────
+# "지금 진행 중인 릴리스" 를 코드가 판정한다. AI 를 쓰지 않는다(공짜·결정론적).
+#
+# 판정 규칙(bin/release-focus.sh):
+#   1) **내 담당 미완료 이슈에 붙어 있는 Fix Version 만** 후보다.
+#      Jira 의 전체 버전 목록을 훑지 않는다 — 남이 열어놓고 방치한 옛 버전이
+#      섞인다(실측: 2022~2023 년에 열린 채 미릴리즈로 남은 버전이 여럿 있었다).
+#   2) 이미 릴리스된 버전(released=true)은 제외한다.
+#   3) 남은 후보를 **릴리스 라인**(버전 번호를 떼어낸 이름)으로 묶고,
+#      라인별로 버전 번호가 가장 높은 하나만 활성으로 본다.
+#        product-v0.0.7, product-v0.0.8  → 라인 "product", 활성 v0.0.8
+#        [App] v2.0.9-rc5, [App] v2.4.1  → 라인 "[App]",   활성 v2.4.1
+#
+# Jira 에 다음 릴리스를 추가하면 그 다음 실행부터 자동으로 옮겨간다.
+# 이 파일에 버전 번호를 적을 필요가 없다.
+RELEASE_FOCUS="${RELEASE_FOCUS:-1}"
+
+# ── 선택: 워크트리 자동 생성 ────────────────────────────────────────────
+# 활성 릴리스의 이슈마다 `feature/<이슈키>` 브랜치와 워크트리를 미리 만들어 둔다.
+# 아침에 이슈를 열자마자 그 디렉터리로 들어가 바로 작업할 수 있게 하는 것이 목적이다.
+# WT_REPO 를 비워 두면 이 기능 전체가 꺼진다.
+#
+# 안전선(bin/make-worktree.sh 는 절대 하지 않는다):
+#   - 기존 브랜치·워크트리·디렉터리 삭제나 덮어쓰기
+#   - `git worktree prune`, `reset --hard`, `checkout -- .`
+#   - fetch / push  (분기 기준은 로컬 브랜치다. 네트워크를 쓰지 않는다.)
+WORKTREE_AUTO="${WORKTREE_AUTO:-1}"
+BRANCH_PREFIX="${BRANCH_PREFIX:-feature/}"
+
+# Windows(WSL) 에서 /mnt/<드라이브> 의 저장소를 다룰 때 쓸 git 실행 파일.
+# WSL git 으로 쓰기 작업을 하면 CRLF 때문에 워킹트리가 깨진다 —
+# 이유는 lib/common.sh 의 git_win() 주석에 실측과 함께 적어 두었다.
+# 저장소가 리눅스 파일시스템에만 있으면 이 값은 쓰이지 않는다.
+GIT_WIN="${GIT_WIN:-/mnt/c/Program Files/Git/cmd/git.exe}"
+
+# product(분류 결과: launcher / fe / planner) → 저장소.
+# 분류가 unknown 이면 만들지 않고 리포트에 "저장소 매핑 없음" 으로 남긴다.
+declare -A WT_REPO=(
+  # [launcher]="/path/to/launcher"
+)
+# 워크트리를 놓을 상위 디렉터리. `<root>/<이슈키>` 가 된다.
+declare -A WT_ROOT=(
+  # [launcher]="/path/to/launcher_wt"
+)
+# 분기 기준 브랜치(로컬).
+declare -A WT_BASE=(
+  # [launcher]="dev"
+)
+# gitignore 돼서 새 워크트리엔 없는데 빌드에 필요한 파일. 저장소 루트 기준 상대경로.
+# 이걸 안 넣으면 워크트리에 들어가 빌드하는 순간 SDK 경로가 없다고 죽는다.
+declare -A WT_SEED=(
+  # [launcher]="android/local.properties .env"
+)
+# 사람이 직접 해야 하는 후속 작업. 리포트/로그에 그대로 실린다.
+# 의존성 디렉터리(node_modules 등)는 복사하지 않는다 — 이슈마다 수 GB 를 복제하게 된다.
+declare -A WT_MANUAL=(
+  # [launcher]="npm ci"
+)
+
 # ── 경로 ────────────────────────────────────────────────────────────────
 JIRA_DIR="${JIRA_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 BIN_DIR="$JIRA_DIR/bin"
@@ -84,6 +143,7 @@ PROJ_DIR="$JIRA_DIR/projects"
 ISSUES_JSON="$STATE_DIR/issues.json"     # 정본. 사람이 손으로 고치지 않는다.
 REPORT_DIR="$JIRA_DIR/reports"           # 생성물. reports/<날짜>.md 를 사람이 읽는다.
 LAST_RUN="$STATE_DIR/last-run.json"
+FOCUS_JSON="$STATE_DIR/release-focus.json"   # 생성물. 정본에서 매 실행 다시 계산한다.
 
 # cron 은 PATH 가 최소다. claude / node 를 명시적으로 넣는다.
 export PATH="$HOME/.npm-global/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
