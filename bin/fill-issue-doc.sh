@@ -27,13 +27,20 @@ for i in store:
         continue
     if want:
         if i["key"] in want:
-            out.append(i["key"])
+            out.append(i)
         continue
     if i.get("filled_at") and not force:
         continue
-    out.append(i["key"])
-for k in out[:limit]:
-    print(k)
+    out.append(i)
+
+# 상한(MAX_FILL_PER_RUN)이 있으니 순서가 곧 우선순위다.
+# 활성 릴리스 이슈를 먼저 채운다 — 릴리스 밖 이슈를 먼저 분석하고 상한에 걸려
+# 이번 릴리스 이슈가 며칠씩 밀리면 이 도구를 쓰는 이유가 없어진다.
+# 같은 순위 안에서는 정본 순서(updated 내림차순)를 그대로 쓴다.
+if not want:
+    out.sort(key=lambda i: 0 if i.get("release_focus") else 1)
+for i in out[:limit]:
+    print(i["key"])
 PY
 )
 

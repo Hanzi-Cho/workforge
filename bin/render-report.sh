@@ -20,23 +20,32 @@ REPORT="$REPORT_DIR/$DATE.md"
 
 # ── 1) 목록 렌더 + 브리핑용 요약 추출 ───────────────────────────────────
 SUMMARY="$STATE_DIR/.briefing.json"
-python3 - "$ISSUES_JSON" "$REPORT" "$SITE_URL" "$DATE" "$SUMMARY" <<'PY'
-import json, sys, datetime
-store_p, out_p, site, date, sum_p = sys.argv[1:6]
+python3 - "$ISSUES_JSON" "$REPORT" "$SITE_URL" "$DATE" "$SUMMARY" "$FOCUS_JSON" <<'PY'
+import json, os, sys, datetime
+store_p, out_p, site, date, sum_p, focus_p = sys.argv[1:7]
 d = json.load(open(store_p))
 live = [i for i in d["issues"] if not i.get("gone_since")]
+focus = json.load(open(focus_p)) if os.path.exists(focus_p) else {}
+focus_keys = set(focus.get("focus_keys") or [])
 
-# 본문·제목 변경은 status_history 가 아니라 changelog 에만 남는다.
-# 이걸 안 보면 "본문만 수정된 이슈"가 변경 절에서 누락돼 잔여로 밀린다.
-EDIT_MARKS = ("본문", "제목")
+# 본문·제목·릴리스 배정 변경은 status_history 가 아니라 changelog 에만 남는다.
+# 이걸 안 보면 "본문만 수정된 이슈"나 "릴리스에 새로 들어온 이슈"가
+# 변경 절에서 누락돼 잔여로 밀린다.
+EDIT_MARKS = ("본문", "제목", "릴리스")
 
 def edits_today(i):
     return [c for c in (i.get("changelog") or [])
             if c.get("at") == date and any(m in str(c.get("event")) for m in EDIT_MARKS)]
 
 def line(i, transition=False):
-    """한 이슈 = 한 줄. 링크 · 제목 · (상태전이/본문변경) · 파일경로."""
-    seg = f"- [{i['key']}]({site}/browse/{i['key']}) {i.get('summary','').strip()}"
+    """한 이슈 = 한 줄. 링크 · 제목 · (상태전이/본문변경) · 파일경로.
+
+    활성 릴리스 소속이면 앞에 ◆ 를 붙인다 — 목록을 훑을 때 이번 릴리스에서
+    끝내야 하는 것과 그 밖의 것이 한눈에 갈려야 한다.
+    """
+    mark = "◆ " if i["key"] in focus_keys else ""
+    seg = (f"- {mark}[{i['key']}]({site}/browse/{i['key']}) "
+           f"{i.get('summary','').strip()}")
     if transition:
         tr = [h for h in (i.get("status_history") or []) if h["at"] == date and h.get("from")]
         if tr:
@@ -59,7 +68,60 @@ chgk = {i["key"] for i in chg}
 rest = [i for i in live if i["key"] not in newk and i["key"] not in chgk]
 
 def bykey(x): return x["key"]
+by_key = {i["key"]: i for i in live}
+
+
+def clip(s, n=44):
+    s = (s or "").strip().replace("|", "\\|")
+    return s if len(s) <= n else s[:n - 1] + "…"
+
+
+def focus_section():
+    """릴리스별 현황판. 이슈 목록보다 위에 온다 — 아침에 제일 먼저 볼 것이다."""
+    rels = focus.get("releases") or []
+    if not rels:
+        return ["## 릴리스 포커스", "",
+                "- 활성 릴리스가 없다. 내 담당 이슈에 미릴리즈 Fix Version 이 하나도 없다.",
+                ""]
+    out = ["## 릴리스 포커스", ""]
+    for r in rels:
+        keys = [x["key"] for x in r["issues"]]
+        n_new = sum(1 for k in keys if k in newk)
+        n_chg = sum(1 for k in keys if k in chgk)
+        st = " · ".join(f"{s} {c}" for s, c in r["counts_by_status"].items())
+        out += [f"### ◆ {r['name']} — {r['project']} · {len(keys)}건", "",
+                f"{st} — 오늘 신규 {n_new} · 변경 {n_chg}", "",
+                "| 이슈 | 상태 | 제목 | 브랜치 | 워크트리 |",
+                "|---|---|---|---|---|"]
+        for x in r["issues"]:
+            i = by_key.get(x["key"]) or {}
+            wt = i.get("worktree") or {}
+            blocked = i.get("worktree_blocked") or {}
+            if wt:
+                br = f"`{wt['branch']}`"
+                p = wt["path"].rstrip("/").split("/")
+                cell = f"`{'/'.join(p[-2:])}`"
+            elif blocked:
+                br = f"`{blocked.get('branch') or '-'}`"
+                cell = f"⚠ {blocked.get('reason') or '수동 확인'}"
+            else:
+                br, cell = "-", "미생성"
+            out += [f"| [{x['key']}]({site}/browse/{x['key']}) "
+                    f"| {x.get('status') or '?'} | {clip(x.get('summary'))} "
+                    f"| {br} | {cell} |"]
+        out += [""]
+    ent, left = focus.get("entered_today") or [], focus.get("left_today") or []
+    if ent:
+        out += [f"- 릴리스 신규 진입: {', '.join(ent)}"]
+    if left:
+        out += [f"- 릴리스 이탈: {', '.join(left)}"]
+    if ent or left:
+        out += [""]
+    return out
+
+
 L = [f"# {date} Daily Report", ""]
+L += focus_section()
 L += [f"## 신규 ({len(new)})", ""]
 L += [line(i) for i in sorted(new, key=bykey)] or ["- 없음"]
 L += ["", f"## 변경 ({len(chg)})", ""]
@@ -86,6 +148,17 @@ json.dump({
     "by_product": dict(Counter(i.get("product") or "unknown" for i in live)),
     "by_release": dict(Counter(", ".join(i.get("fix_versions") or []) or "unassigned"
                                 for i in live)),
+    # 활성 릴리스가 판단의 축이다. 브리핑이 "이번 릴리스에서 뭐가 남았나" 를
+    # 말할 수 있어야 한다.
+    "release_focus": [
+        {"name": r["name"], "project": r["project"], "total": len(r["issues"]),
+         "by_status": r["counts_by_status"],
+         "new_today": sum(1 for x in r["issues"] if x["key"] in newk),
+         "changed_today": sum(1 for x in r["issues"] if x["key"] in chgk),
+         "no_worktree": [x["key"] for x in r["issues"]
+                         if not (by_key.get(x["key"]) or {}).get("worktree")]}
+        for r in (focus.get("releases") or [])],
+    "entered_release_today": focus.get("entered_today") or [],
     "recommendations": dict(Counter(i.get("recommendation") for i in live
                                     if i.get("recommendation"))),
     "new_issues": slim(sorted(new, key=bykey)),
