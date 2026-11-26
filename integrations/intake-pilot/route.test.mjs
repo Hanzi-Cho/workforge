@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { compileFunction } from 'node:vm';
+import { fileURLToPath } from 'node:url';
 import { routeBatch, routeEvent } from './route.mjs';
 const events = JSON.parse(readFileSync(new URL('examples.json', import.meta.url), 'utf8'));
 const [intake, incomplete, done, noLesson, approved, rejected] = events;
@@ -68,4 +73,19 @@ test('daily draft keeps ordered case evidence, reports missing fields and reject
   assert.deepEqual(actions(journal('2025-02-29', [entry])), ['blocked']);
   assert.deepEqual(actions(journal('2026-11-26', [])), ['needs_input']);
   assert.deepEqual(routeEvent(journal('2026-11-26', [{...entry, result:''}]))[0].payload.missing, ['entries[0].result']);
+});
+
+test('the n8n input node preserves a valid event alongside malformed rows', t => {
+  const dir = mkdtempSync(join(tmpdir(), 'agentasm-input-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const input = join(dir, 'events.json');
+  const output = join(dir, 'workflow.json');
+  const sample = { ...intake, payload: { ...intake.payload, observed: 'Sample with quotes " and a newline\n.' } };
+  writeFileSync(input, JSON.stringify([null, 42, [], sample]));
+  execFileSync(process.execPath, [fileURLToPath(new URL('build.mjs', import.meta.url)), '--input', input, '--output', output]);
+  const workflow = JSON.parse(readFileSync(output, 'utf8'));
+  const source = workflow.nodes.find(node => node.name === '이벤트 입력').parameters.jsCode;
+  const items = compileFunction(source)();
+  assert.deepEqual(items.map(item => item.json), [{}, {}, {}, sample]);
+  assert.deepEqual(routeBatch(items.map(item => item.json)).map(r => r.action), ['blocked', 'blocked', 'blocked', 'draft_issue']);
 });
