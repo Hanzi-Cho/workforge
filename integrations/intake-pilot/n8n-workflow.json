@@ -1,0 +1,524 @@
+{
+  "id": "agentAsmWorkContractV1",
+  "name": "AgentASM · 개인 업무 입출력과 동작 분기 v1",
+  "active": false,
+  "nodes": [
+    {
+      "id": "agentasm-0-0",
+      "name": "수동 실행",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-220-0",
+      "name": "이벤트 입력",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const events = [\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"intake-a\",\n    \"revision\": 1,\n    \"type\": \"issue.received\",\n    \"payload\": {\n      \"app_version\": \"demo-1.2\",\n      \"device_os\": \"demo-emulator\",\n      \"observed\": \"대문자 확장자의 예제 문서 가져오기 실패\",\n      \"expected\": \"형식이 같으면 가져오기 성공\",\n      \"frequency\": \"합성 입력 2회 중 2회\",\n      \"steps\": \"예제 파일을 선택하고 가져오기 실행\",\n      \"evidence_ref\": \"fixture-import-uppercase\",\n      \"channel\": \"email\"\n    }\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"intake-b\",\n    \"revision\": 1,\n    \"type\": \"issue.received\",\n    \"payload\": {\n      \"app_version\": \"\",\n      \"device_os\": \"demo-emulator\",\n      \"observed\": \"대문자 확장자의 예제 문서 가져오기 실패\",\n      \"expected\": \"형식이 같으면 가져오기 성공\",\n      \"frequency\": \"\",\n      \"steps\": \"예제 파일을 선택하고 가져오기 실행\",\n      \"evidence_ref\": \"fixture-import-uppercase\",\n      \"channel\": \"phone\"\n    }\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"done-a\",\n    \"revision\": 1,\n    \"type\": \"work.completed\",\n    \"payload\": {\n      \"gate_id\": \"verify-import\",\n      \"artifact_id\": \"demo-patch\",\n      \"artifact_revision\": 2,\n      \"verification_ref\": \"fixture-replay\",\n      \"learning\": {\n        \"id\": \"lesson-1\",\n        \"text\": \"확장자 정규화는 선택기와 파서에서 같은 기준을 사용한다.\"\n      }\n    }\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"done-b\",\n    \"revision\": 1,\n    \"type\": \"work.completed\",\n    \"payload\": {\n      \"gate_id\": \"verify-import\",\n      \"artifact_id\": \"demo-patch\",\n      \"artifact_revision\": 2,\n      \"verification_ref\": \"fixture-replay\"\n    }\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"review-a\",\n    \"revision\": 1,\n    \"type\": \"review.decided\",\n    \"payload\": {\n      \"artifact_id\": \"demo-patch\",\n      \"artifact_revision\": 2,\n      \"decision\": \"approved\",\n      \"human_review_ref\": \"demo-review\"\n    }\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"review-b\",\n    \"revision\": 1,\n    \"type\": \"review.decided\",\n    \"payload\": {\n      \"artifact_id\": \"demo-patch\",\n      \"artifact_revision\": 2,\n      \"decision\": \"changes_requested\",\n      \"human_review_ref\": \"demo-review\"\n    }\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"untyped\",\n    \"revision\": 1,\n    \"type\": \"other\",\n    \"payload\": {}\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"intake-a\",\n    \"revision\": 1,\n    \"type\": \"issue.received\",\n    \"payload\": {\n      \"app_version\": \"demo-1.2\",\n      \"device_os\": \"demo-emulator\",\n      \"observed\": \"대문자 확장자의 예제 문서 가져오기 실패\",\n      \"expected\": \"형식이 같으면 가져오기 성공\",\n      \"frequency\": \"합성 입력 2회 중 2회\",\n      \"steps\": \"예제 파일을 선택하고 가져오기 실행\",\n      \"evidence_ref\": \"fixture-import-uppercase\",\n      \"channel\": \"email\"\n    }\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"intake-existing\",\n    \"revision\": 1,\n    \"type\": \"issue.received\",\n    \"payload\": {\n      \"app_version\": \"demo-1.2\",\n      \"device_os\": \"demo-emulator\",\n      \"observed\": \"대문자 확장자의 예제 문서 가져오기 실패\",\n      \"expected\": \"형식이 같으면 가져오기 성공\",\n      \"frequency\": \"합성 입력 2회 중 2회\",\n      \"steps\": \"예제 파일을 선택하고 가져오기 실행\",\n      \"evidence_ref\": \"fixture-import-uppercase\",\n      \"channel\": \"jira\",\n      \"issue_key\": \"DEMO-21\"\n    }\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"file-import\",\n    \"event_id\": \"intake-meeting\",\n    \"revision\": 1,\n    \"type\": \"issue.received\",\n    \"payload\": {\n      \"app_version\": \"demo-1.2\",\n      \"device_os\": \"demo-emulator\",\n      \"observed\": \"대문자 확장자의 예제 문서 가져오기 실패\",\n      \"expected\": \"형식이 같으면 가져오기 성공\",\n      \"frequency\": \"합성 입력 2회 중 2회\",\n      \"steps\": \"예제 파일을 선택하고 가져오기 실행\",\n      \"evidence_ref\": \"fixture-import-uppercase\",\n      \"channel\": \"in_person\"\n    }\n  },\n  {\n    \"schema\": \"work.event.v1\",\n    \"classification\": \"synthetic\",\n    \"case_id\": \"demo-day\",\n    \"event_id\": \"demo-journal\",\n    \"revision\": 1,\n    \"type\": \"workday.closed\",\n    \"payload\": {\n      \"work_date\": \"2026-11-26\",\n      \"entries\": [\n        {\n          \"case_id\": \"file-import\",\n          \"work\": \"예제 문서의 가져오기 오류를 재현하고 수정했다.\",\n          \"result\": \"합성 회귀 입력을 다시 확인했다.\",\n          \"evidence_ref\": \"fixture-replay\",\n          \"next_step\": \"검토 요청 결과를 확인한다.\"\n        }\n      ]\n    }\n  }\n];\nreturn events.map(value => ({ json: value && typeof value === 'object' && !Array.isArray(value) ? value : {} }));"
+      }
+    },
+    {
+      "id": "agentasm-440-0",
+      "name": "계약 검증과 출력 생성",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "function classifyEvent(input) {\n  const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);\n  const id = value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(value);\n  const revision = value => Number.isInteger(value) && value > 0 && value <= 2147483647;\n  const invalid = code => [{ schema: 'work.route.v1', target: 'local', action: 'blocked', payload: { code } }];\n  if (!record(input) || input.schema !== 'work.event.v1') return invalid('unsupported_schema');\n  if (!['synthetic', 'personal'].includes(input.classification)) return invalid('disallowed_classification');\n  if (!id(input.case_id) || !id(input.event_id) || !revision(input.revision)) return invalid('invalid_identity');\n  const { case_id, event_id, type, classification, payload, revision: rev } = input;\n  function result(target, action, body) {\n    return { schema: 'work.route.v1', case_id, event_id, revision: rev, classification,\n      key: [event_id, rev, target, action].join('/'), target, action, payload: body };\n  }\n  const block = code => [result('local', 'blocked', { code })];\n  const envelope = ['schema', 'classification', 'case_id', 'event_id', 'revision', 'type', 'payload'];\n  if (Object.keys(input).some(key => !envelope.includes(key))) return block('unexpected_envelope_field');\n  const contracts = {\n    'issue.received': ['app_version', 'device_os', 'observed', 'expected', 'frequency', 'steps', 'evidence_ref'],\n    'work.completed': ['gate_id', 'artifact_id', 'artifact_revision', 'verification_ref'],\n    'workday.closed': ['work_date', 'entries'],\n    'review.decided': ['artifact_id', 'artifact_revision', 'decision', 'human_review_ref'],\n  };\n  if (typeof type !== 'string' || !Object.hasOwn(contracts, type)) return block('unknown_type');\n  if (!record(payload)) return block('invalid_payload');\n  const required = [...contracts[type]];\n  const optional = { 'work.completed': ['learning'], 'issue.received': ['channel','issue_key'] };\n  const allowed = [...required, ...(optional[type] ?? [])];\n  if (Object.keys(payload).some(key => !allowed.includes(key))) return block('unexpected_payload_field');\n  const missing = [];\n  const clean = {};\n  if (type === 'issue.received') {\n    if (Object.hasOwn(payload, 'channel')) {\n      if (!['jira', 'email', 'phone', 'in_person'].includes(payload.channel)) return block('unknown_channel');\n      clean.channel = payload.channel;\n    }\n    if (payload.channel === 'jira' || Object.hasOwn(payload, 'issue_key')) required.push('issue_key');\n  }\n  for (const field of required) {\n    const value = payload[field];\n    if (value == null || (typeof value === 'string' && !value.trim())) {\n      missing.push(field);\n      continue;\n    }\n    if (field === 'entries') {\n      if (!Array.isArray(value) || value.length > 100) return block('invalid_entries');\n      if (!value.length) { missing.push('entries'); continue; }\n      const fields = ['case_id', 'work', 'result', 'evidence_ref', 'next_step'];\n      clean.entries = [];\n      for (const [index, entry] of value.entries()) {\n        if (!record(entry) || Object.keys(entry).some(key => !fields.includes(key))) return block('invalid_entry');\n        const row = {};\n        for (const key of fields) {\n          const text = entry[key];\n          if (text == null || (typeof text === 'string' && !text.trim())) {\n            missing.push('entries[' + index + '].' + key);\n            continue;\n          }\n          if (typeof text !== 'string' || text.length > 1000) return block('invalid_entry_' + key);\n          row[key] = text.trim();\n          if ((key === 'case_id' || key === 'evidence_ref') && !id(row[key])) return block('invalid_entry_' + key);\n        }\n        clean.entries.push(row);\n      }\n    } else if (field === 'artifact_revision') {\n      if (!revision(value)) return block('invalid_artifact_revision');\n      clean[field] = value;\n    } else {\n      if (typeof value !== 'string' || value.length > 1000) return block('invalid_' + field);\n      clean[field] = value.trim();\n      if (field === 'issue_key' && (clean[field].length > 64 || !/^[A-Z][A-Z0-9_]*-[1-9][0-9]*$/.test(clean[field]))) {\n        return block('invalid_issue_key');\n      }\n      if (field === 'work_date') {\n        const day = clean[field];\n        if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(day)) return block('invalid_work_date');\n        const date = new Date(day + 'T00:00:00Z');\n        if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0,10) !== day) return block('invalid_work_date');\n      }\n      if ((field.endsWith('_ref') || field.endsWith('_id')) && !id(clean[field])) return block('invalid_' + field);\n    }\n  }\n  if (clean.decision && !['approved', 'changes_requested'].includes(clean.decision)) return block('unknown_decision');\n  if (type === 'work.completed' && Object.hasOwn(payload, 'learning')) {\n    const learn = payload.learning;\n    if (!record(learn) || Object.keys(learn).some(key => !['id', 'text'].includes(key)) ||\n        !id(learn.id) || typeof learn.text !== 'string' || !learn.text.trim() || learn.text.length > 1000) {\n      return block('invalid_learning');\n    }\n  }\n  if (missing.length) {\n    const details = { missing };\n    if (clean.issue_key) details.issue_key = clean.issue_key;\n    return [result('local', 'needs_input', details)];\n  }\n  if (type === 'workday.closed') return [result('confluence', 'daily_draft', clean)];\n  if (type === 'issue.received') return [result('jira', clean.issue_key ? 'draft_update' : 'draft_issue', clean)];\n  if (type === 'review.decided') {\n    const action = clean.decision === 'approved' ? 'review_receipt' : 'request_revision';\n    return [result('hookboard', action, clean)];\n  }\n  const outputs = [result('hookboard', 'evidence_candidate', clean)];\n  if (payload.learning) {\n    const fact = { id: payload.learning.id, kind: 'learning', text: payload.learning.text.trim() };\n    outputs.push(result('til', 'private_candidate', { fact, verification_ref: clean.verification_ref }));\n  }\n  return outputs;\n}\n\nfunction projectOntology(input, route) {\n  const classification = route.classification ?? 'unclassified';\n  const { case_id: caseId, event_id: eventId, revision, target, action, payload } = route;\n  const rejected = action === 'blocked';\n  const conflict = rejected && payload.code === 'revision_conflict';\n  const eventType = !rejected && ['issue.received', 'work.completed', 'review.decided', 'workday.closed'].includes(input?.type)\n    ? input.type : null;\n  const nodes = new Map();\n  const edges = new Map();\n  function node(type, parts, label) {\n    const id = type + ':' + [classification, ...parts].map(encodeURIComponent).join('/');\n    nodes.set(id, { id, type, label });\n    return id;\n  }\n  function edge(from, type, to) {\n    const id = 'edge:' + type + '|' + from + '|' + to;\n    edges.set(id, { id, from, type, to });\n  }\n  const caseNode = id => node('case', [id], id);\n  const ref = (type, id, scope = caseId) => node(type, [scope, id], id);\n  const eventParts = eventId ? [eventId, revision] : [];\n  // An unidentified rejection describes a category. Do not invent an occurrence ID\n  // from the input body, clock, execution order, or random data.\n  const outputParts = eventId ? [...eventParts, target, action] : [target, action, payload.code];\n  const output = node('output', outputParts, action);\n  edge(output, 'routed_to', node('destination', [target], target));\n  const dispositions = {\n    draft_issue: 'draft', draft_update: 'draft', daily_draft: 'draft',\n    evidence_candidate: 'candidate', private_candidate: 'candidate',\n    review_receipt: 'review_record', request_revision: 'revision_requested',\n    needs_input: 'waiting_for_input', duplicate: 'duplicate', blocked: 'blocked',\n  };\n  const disposition = dispositions[action];\n  const reasonParts = payload.code ? [disposition, payload.code] : [disposition];\n  edge(output, 'disposition', node('outcome', reasonParts, reasonParts.join(' · ')));\n  if (eventId) {\n    const event = node('event', eventParts, eventId + '@' + revision);\n    edge(event, 'yields', output);\n    if (!conflict) edge(event, 'about_case', caseNode(caseId));\n    if (action !== 'duplicate' && !rejected) {\n      if (eventType === 'issue.received') {\n        const channel = input.payload.channel;\n        if (channel) edge(node('channel', [channel], channel), 'received', event);\n        if (payload.issue_key) edge(output, 'refers_to_ticket', node('ticket', [payload.issue_key], payload.issue_key));\n        if (payload.evidence_ref) {\n          const evidence = ref('evidence', payload.evidence_ref);\n          edge(event, 'cites', evidence);\n          edge(evidence, 'supports', output);\n        }\n      }\n      if (action === 'needs_input') {\n        for (const field of payload.missing)\n          edge(output, 'requires', node('requirement', [...eventParts, field], field));\n      } else if (eventType === 'work.completed' || eventType === 'review.decided') {\n        // A private_candidate contains the learning fact only. Its verified input\n        // still identifies the exact same artifact and gate as the paired route.\n        const { artifact_id, artifact_revision, gate_id } = input.payload;\n        const artifactId = artifact_id.trim();\n        const artifact = node('artifact', [caseId, artifactId, artifact_revision], artifactId + '@' + artifact_revision);\n        edge(event, 'concerns_artifact', artifact);\n        if (gate_id) edge(event, 'at_gate', ref('gate', gate_id.trim()));\n        if (payload.verification_ref) {\n          const evidence = ref('evidence', payload.verification_ref);\n          edge(event, 'cites', evidence);\n          edge(evidence, 'verifies', artifact);\n          edge(evidence, 'supports', output);\n        }\n        if (payload.human_review_ref) {\n          const review = ref('review', payload.human_review_ref);\n          edge(event, 'cites', review);\n          edge(review, 'reviewed_artifact', artifact);\n          edge(review, 'supports', output);\n        }\n        if (payload.fact) {\n          const learning = node('learning', [caseId, ...eventParts, payload.fact.id], payload.fact.id);\n          edge(output, 'describes_learning', learning);\n        }\n      } else if (action === 'daily_draft') {\n        for (const [index, entry] of payload.entries.entries()) {\n          const row = node('journal_entry', [...eventParts, index], payload.work_date + ' #' + (index + 1));\n          edge(event, 'includes_entry', row);\n          edge(row, 'about_case', caseNode(entry.case_id));\n          edge(row, 'cites', ref('evidence', entry.evidence_ref, entry.case_id));\n          edge(row, 'contributes_to', output);\n        }\n      }\n    }\n  }\n  const sorted = map => [...map.values()].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);\n  return {\n    schema: 'work.ontology.v1', classification,\n    provenance: { route_schema: route.schema, route_key: route.key ?? null, event_type: eventType },\n    nodes: sorted(nodes), edges: sorted(edges),\n  };\n}\n\nfunction routeBatch(inputs) {\n  // Compare wire-equivalent JSON objects independently of property order.\n  const canonical = value => {\n    if (Array.isArray(value)) return value.map(canonical);\n    if (value && typeof value === 'object') {\n      return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])]));\n    }\n    return value;\n  };\n  const groups = new Map();\n  const entries = inputs.map(input => {\n    const outputs = classifyEvent(input);\n    const head = outputs[0];\n    if (!head.event_id) return { input, outputs };\n    const key = head.event_id + '/' + head.revision;\n    const body = JSON.stringify(canonical(input));\n    if (!groups.has(key)) groups.set(key, new Set());\n    groups.get(key).add(body);\n    return { input, key, outputs };\n  });\n  const seen = new Set();\n  return entries.flatMap(({ input, key, outputs }) => {\n    const project = route => ({ ...route, ontology: projectOntology(input, route) });\n    if (!key) return outputs.map(project);\n    const head = outputs[0];\n    const conflict = groups.get(key).size > 1;\n    if (!conflict && !seen.has(key)) {\n      seen.add(key);\n      return outputs.map(project);\n    }\n    const action = conflict ? 'blocked' : 'duplicate';\n    return [project({ schema: head.schema, classification: head.classification, case_id: head.case_id,\n      event_id: head.event_id, revision: head.revision, key: key + '/local/' + action,\n      target: 'local', action, payload: { code: conflict ? 'revision_conflict' : 'already_in_batch' } })];\n  });\n}\n\nreturn routeBatch($input.all().map(item => item.json)).map(json => ({ json }));"
+      }
+    },
+    {
+      "id": "agentasm-660-0",
+      "name": "동작 분기",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "renameOutput": true,
+              "outputKey": "draft_issue",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "draft_issue",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "draft_issue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "draft_update",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "draft_update",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "draft_update",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "daily_draft",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "daily_draft",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "daily_draft",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "needs_input",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "needs_input",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "needs_input",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "evidence_candidate",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "evidence_candidate",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "evidence_candidate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "private_candidate",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "private_candidate",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "private_candidate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "review_receipt",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "review_receipt",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "review_receipt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "request_revision",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "request_revision",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "request_revision",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "duplicate",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "duplicate",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "duplicate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "blocked",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "blocked",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "blocked",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "agentasm-1000--420",
+      "name": "Jira 티켓 초안",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -420
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-1000--300",
+      "name": "기존 Jira 티켓 보완 초안",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-1000--180",
+      "name": "Confluence 업무일지 초안",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-1000--60",
+      "name": "누락 필드 보완",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -60
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-1000-60",
+      "name": "Hookboard 검증 근거 후보",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        60
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-1000-180",
+      "name": "TIL 비공개 후보",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-1000-300",
+      "name": "사람 검토 근거 접수",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-1000-420",
+      "name": "수정 요청",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        420
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-1000-540",
+      "name": "동일 입력 건너뛰기",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "agentasm-1000-660",
+      "name": "처리 차단",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        660
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "수동 실행": {
+      "main": [
+        [
+          {
+            "node": "이벤트 입력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이벤트 입력": {
+      "main": [
+        [
+          {
+            "node": "계약 검증과 출력 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "계약 검증과 출력 생성": {
+      "main": [
+        [
+          {
+            "node": "동작 분기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "동작 분기": {
+      "main": [
+        [
+          {
+            "node": "Jira 티켓 초안",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "기존 Jira 티켓 보완 초안",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confluence 업무일지 초안",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "누락 필드 보완",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Hookboard 검증 근거 후보",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TIL 비공개 후보",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "사람 검토 근거 접수",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "수정 요청",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "동일 입력 건너뛰기",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "처리 차단",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

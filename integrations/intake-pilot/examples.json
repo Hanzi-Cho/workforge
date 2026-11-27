@@ -1,0 +1,182 @@
+[
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "intake-a",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "demo-1.2",
+      "device_os": "demo-emulator",
+      "observed": "대문자 확장자의 예제 문서 가져오기 실패",
+      "expected": "형식이 같으면 가져오기 성공",
+      "frequency": "합성 입력 2회 중 2회",
+      "steps": "예제 파일을 선택하고 가져오기 실행",
+      "evidence_ref": "fixture-import-uppercase",
+      "channel": "email"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "intake-b",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "",
+      "device_os": "demo-emulator",
+      "observed": "대문자 확장자의 예제 문서 가져오기 실패",
+      "expected": "형식이 같으면 가져오기 성공",
+      "frequency": "",
+      "steps": "예제 파일을 선택하고 가져오기 실행",
+      "evidence_ref": "fixture-import-uppercase",
+      "channel": "phone"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "done-a",
+    "revision": 1,
+    "type": "work.completed",
+    "payload": {
+      "gate_id": "verify-import",
+      "artifact_id": "demo-patch",
+      "artifact_revision": 2,
+      "verification_ref": "fixture-replay",
+      "learning": {
+        "id": "lesson-1",
+        "text": "확장자 정규화는 선택기와 파서에서 같은 기준을 사용한다."
+      }
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "done-b",
+    "revision": 1,
+    "type": "work.completed",
+    "payload": {
+      "gate_id": "verify-import",
+      "artifact_id": "demo-patch",
+      "artifact_revision": 2,
+      "verification_ref": "fixture-replay"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "review-a",
+    "revision": 1,
+    "type": "review.decided",
+    "payload": {
+      "artifact_id": "demo-patch",
+      "artifact_revision": 2,
+      "decision": "approved",
+      "human_review_ref": "demo-review"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "review-b",
+    "revision": 1,
+    "type": "review.decided",
+    "payload": {
+      "artifact_id": "demo-patch",
+      "artifact_revision": 2,
+      "decision": "changes_requested",
+      "human_review_ref": "demo-review"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "untyped",
+    "revision": 1,
+    "type": "other",
+    "payload": {}
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "intake-a",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "demo-1.2",
+      "device_os": "demo-emulator",
+      "observed": "대문자 확장자의 예제 문서 가져오기 실패",
+      "expected": "형식이 같으면 가져오기 성공",
+      "frequency": "합성 입력 2회 중 2회",
+      "steps": "예제 파일을 선택하고 가져오기 실행",
+      "evidence_ref": "fixture-import-uppercase",
+      "channel": "email"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "intake-existing",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "demo-1.2",
+      "device_os": "demo-emulator",
+      "observed": "대문자 확장자의 예제 문서 가져오기 실패",
+      "expected": "형식이 같으면 가져오기 성공",
+      "frequency": "합성 입력 2회 중 2회",
+      "steps": "예제 파일을 선택하고 가져오기 실행",
+      "evidence_ref": "fixture-import-uppercase",
+      "channel": "jira",
+      "issue_key": "DEMO-21"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "file-import",
+    "event_id": "intake-meeting",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "demo-1.2",
+      "device_os": "demo-emulator",
+      "observed": "대문자 확장자의 예제 문서 가져오기 실패",
+      "expected": "형식이 같으면 가져오기 성공",
+      "frequency": "합성 입력 2회 중 2회",
+      "steps": "예제 파일을 선택하고 가져오기 실행",
+      "evidence_ref": "fixture-import-uppercase",
+      "channel": "in_person"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "demo-day",
+    "event_id": "demo-journal",
+    "revision": 1,
+    "type": "workday.closed",
+    "payload": {
+      "work_date": "2026-11-26",
+      "entries": [
+        {
+          "case_id": "file-import",
+          "work": "예제 문서의 가져오기 오류를 재현하고 수정했다.",
+          "result": "합성 회귀 입력을 다시 확인했다.",
+          "evidence_ref": "fixture-replay",
+          "next_step": "검토 요청 결과를 확인한다."
+        }
+      ]
+    }
+  }
+]
