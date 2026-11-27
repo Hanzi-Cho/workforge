@@ -1,5 +1,7 @@
+import { projectOntology } from './ontology.mjs';
+
 // Pure routing. Both the CLI tests and the n8n Code node use these functions.
-export function routeEvent(input) {
+export function classifyEvent(input) {
   const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
   const id = value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(value);
   const revision = value => Number.isInteger(value) && value > 0 && value <= 2147483647;
@@ -107,6 +109,10 @@ export function routeEvent(input) {
   return outputs;
 }
 
+export function routeEvent(input) {
+  return classifyEvent(input).map(route => ({ ...route, ontology: projectOntology(input, route) }));
+}
+
 export function routeBatch(inputs) {
   // Compare wire-equivalent JSON objects independently of property order.
   const canonical = value => {
@@ -118,27 +124,28 @@ export function routeBatch(inputs) {
   };
   const groups = new Map();
   const entries = inputs.map(input => {
-    const outputs = routeEvent(input);
+    const outputs = classifyEvent(input);
     const head = outputs[0];
-    if (!head.event_id) return { outputs };
+    if (!head.event_id) return { input, outputs };
     const key = head.event_id + '/' + head.revision;
     const body = JSON.stringify(canonical(input));
     if (!groups.has(key)) groups.set(key, new Set());
     groups.get(key).add(body);
-    return { key, outputs };
+    return { input, key, outputs };
   });
   const seen = new Set();
-  return entries.flatMap(({ key, outputs }) => {
-    if (!key) return outputs;
+  return entries.flatMap(({ input, key, outputs }) => {
+    const project = route => ({ ...route, ontology: projectOntology(input, route) });
+    if (!key) return outputs.map(project);
     const head = outputs[0];
     const conflict = groups.get(key).size > 1;
     if (!conflict && !seen.has(key)) {
       seen.add(key);
-      return outputs;
+      return outputs.map(project);
     }
     const action = conflict ? 'blocked' : 'duplicate';
-    return [{ schema: head.schema, classification: head.classification, case_id: head.case_id,
+    return [project({ schema: head.schema, classification: head.classification, case_id: head.case_id,
       event_id: head.event_id, revision: head.revision, key: key + '/local/' + action,
-      target: 'local', action, payload: { code: conflict ? 'revision_conflict' : 'already_in_batch' } }];
+      target: 'local', action, payload: { code: conflict ? 'revision_conflict' : 'already_in_batch' } })];
   });
 }

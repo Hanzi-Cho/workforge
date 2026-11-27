@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+from case_trace import TRACE_SCRIPT, case_panels, relations
 from til_delivery import deliver
 
 
@@ -58,6 +59,8 @@ def prepare(routes, til_root=None, day=None):
         row = {"case_id": route.get("case_id"), "event_id": route.get("event_id"), "revision": route.get("revision"),
                "classification": route.get("classification"), "key": route.get("key"),
                "target": route["target"], "action": route["action"], "status": "preview"}
+        if "ontology" in route:
+            row["ontology"] = route["ontology"]
         try:
             row["draft"] = draft(route)
             if route["action"] == "private_candidate" and til_root:
@@ -125,7 +128,9 @@ def render(records):
     groups = []
     for target in ("jira", "confluence", "hookboard", "til", "local"):
         cards = []
-        for record in (r for r in records if r["target"] == target):
+        for index, record in enumerate(records):
+            if record["target"] != target:
+                continue
             action = record["action"]
             data = record.get("draft", {})
             if action == "draft_issue":
@@ -144,13 +149,17 @@ def render(records):
             key = record.get("key") or record.get("event_id") or "식별 전"
             kind = {"synthetic": "합성 예제", "personal": "개인 입력"}.get(record.get("classification"), "분류 전")
             expanded = " open" if action in {"daily_draft", "private_candidate"} else ""
-            cards.append(f'<details{expanded}><summary><strong>{esc(LABELS[action])}</strong> {esc(title)}'
+            cards.append(f'<details id="route-{index}"{expanded}><summary><strong>{esc(LABELS[action])}</strong> {esc(title)}'
                          f'<small>{esc(status)}</small></summary><p>{esc(kind)} · {esc(key)} {esc(note)}</p>'
-                         f'{human_draft(record)}<details><summary>출력 JSON</summary><pre>{fmt(record)}</pre></details></details>')
+                         f'{human_draft(record)}{relations(record.get("ontology"))}'
+                         f'<details><summary>출력 JSON</summary><pre>{fmt(record)}</pre></details></details>')
         if cards:
-            groups.append(f'<section><h2>{esc(target.upper())}</h2>{"".join(cards)}</section>')
+            groups.append(f'<section class="destination"><h2>{esc(target.upper())}</h2>{"".join(cards)}</section>')
     return """<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>업무 초안 검토</title><style>*{box-sizing:border-box}body{font:16px/1.6 "Malgun Gothic",sans-serif;color:#1c3430;background:#f6f8f7;max-width:980px;margin:auto;padding:30px}h1{margin:0}h2{font-size:17px;color:#25604f}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;border:1px solid #cbd7d2;padding:8px}th{background:#eef4f0}dt{font-weight:bold}dd{margin:0 0 6px}.scroll{overflow-x:auto}section{margin:26px 0}details{background:white;border:1px solid #cbd7d2;border-radius:8px;margin:5px 0;padding:12px}
 summary{cursor:pointer}small{display:inline-block;color:#305e52;padding:0 8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}p,li,dd,summary,td{overflow-wrap:anywhere}
-</style><h1>업무 초안 검토</h1><p>항목을 열면 실제 출력과 저장 영수증을 볼 수 있습니다. Jira와 Confluence 항목은 전송 전 초안입니다.</p>""" + "".join(groups) + "</html>\n"
+select{max-width:100%;padding:6px 10px;font:inherit}a{color:#12534a}h3{font-size:16px}.case-pane{margin-top:16px}.trace-table{background:white;font-size:15px}.trace-table th{white-space:nowrap}
+details:target,a:focus-visible,select:focus-visible{outline:2px solid #23715b;outline-offset:2px}
+@media(max-width:600px){body{padding:16px}.trace-table{min-width:580px}}
+</style><h1>업무 초안 검토</h1><p>업무를 선택한 뒤 출력을 열면 해당 초안과 근거를 확인할 수 있습니다. Jira와 Confluence 항목은 전송 전 초안입니다.</p>""" + case_panels(records, LABELS, FIELDS) + "".join(groups) + TRACE_SCRIPT + "</html>\n"

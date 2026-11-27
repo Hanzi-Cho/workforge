@@ -1,0 +1,208 @@
+[
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "offline-notes",
+    "event_id": "note-call",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "",
+      "device_os": "demo-tablet",
+      "observed": "네트워크를 끊은 뒤 저장한 메모가 목록에서 사라진다.",
+      "expected": "오프라인으로 작성한 메모도 목록에 남는다.",
+      "frequency": "",
+      "steps": "비행기 모드에서 예제 메모를 저장하고 목록을 다시 연다.",
+      "evidence_ref": "fixture-note",
+      "channel": "phone"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "offline-notes",
+    "event_id": "note-call",
+    "revision": 2,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "demo-1.4",
+      "device_os": "demo-tablet",
+      "observed": "네트워크를 끊은 뒤 저장한 메모가 목록에서 사라진다.",
+      "expected": "오프라인으로 작성한 메모도 목록에 남는다.",
+      "frequency": "합성 사례에서 세 번 중 두 번",
+      "steps": "비행기 모드에서 예제 메모를 저장하고 목록을 다시 연다.",
+      "evidence_ref": "fixture-note",
+      "channel": "phone"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "offline-notes",
+    "event_id": "note-triage",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "demo-1.4",
+      "device_os": "demo-tablet",
+      "observed": "네트워크를 끊은 뒤 저장한 메모가 목록에서 사라진다.",
+      "expected": "오프라인으로 작성한 메모도 목록에 남는다.",
+      "frequency": "합성 사례에서 세 번 중 두 번",
+      "steps": "비행기 모드에서 예제 메모를 저장하고 목록을 다시 연다.",
+      "evidence_ref": "fixture-note",
+      "channel": "jira",
+      "issue_key": "DEMO-17"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "offline-notes",
+    "event_id": "notes-verified-v1",
+    "revision": 1,
+    "type": "work.completed",
+    "payload": {
+      "gate_id": "notes-regression",
+      "artifact_id": "offline-notes-fix",
+      "artifact_revision": 1,
+      "verification_ref": "replay-notes-v1"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "offline-notes",
+    "event_id": "notes-review-v1",
+    "revision": 1,
+    "type": "review.decided",
+    "payload": {
+      "artifact_id": "offline-notes-fix",
+      "artifact_revision": 1,
+      "decision": "changes_requested",
+      "human_review_ref": "demo-review-v1"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "offline-notes",
+    "event_id": "notes-verified-v2",
+    "revision": 1,
+    "type": "work.completed",
+    "payload": {
+      "gate_id": "notes-regression",
+      "artifact_id": "offline-notes-fix",
+      "artifact_revision": 2,
+      "verification_ref": "replay-notes-v2",
+      "learning": {
+        "id": "lesson-offline",
+        "text": "예제 메모의 저장과 재조회는 같은 회귀 사례에서 함께 검증한다."
+      }
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "offline-notes",
+    "event_id": "notes-review-v2",
+    "revision": 1,
+    "type": "review.decided",
+    "payload": {
+      "artifact_id": "offline-notes-fix",
+      "artifact_revision": 2,
+      "decision": "approved",
+      "human_review_ref": "demo-review-v2"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "pdf-export",
+    "event_id": "pdf-email",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "demo-1.4",
+      "device_os": "demo-desktop",
+      "observed": "내보낸 예제 PDF 제목이 잘린다.",
+      "expected": "제목 전체가 표시된다.",
+      "frequency": "합성 사례 한 번 중 한 번",
+      "steps": "긴 제목의 예제 문서를 PDF로 내보낸다.",
+      "evidence_ref": "fixture-title",
+      "channel": "email"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "pdf-export",
+    "event_id": "pdf-meeting",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "demo-1.4",
+      "device_os": "demo-desktop",
+      "observed": "내보낸 예제 PDF 제목이 잘린다.",
+      "expected": "제목 전체가 표시된다.",
+      "frequency": "합성 사례 한 번 중 한 번",
+      "steps": "긴 제목의 예제 문서를 PDF로 내보낸다.",
+      "evidence_ref": "fixture-title",
+      "channel": "in_person",
+      "issue_key": "DEMO-23"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "journal-day",
+    "event_id": "day-close",
+    "revision": 1,
+    "type": "workday.closed",
+    "payload": {
+      "work_date": "2026-11-27",
+      "entries": [
+        {
+          "case_id": "offline-notes",
+          "work": "합성 메모의 저장과 재조회 흐름을 두 버전에서 확인했다.",
+          "result": "두 번째 버전의 검토 근거를 받았다.",
+          "evidence_ref": "replay-notes-v2",
+          "next_step": "티켓에 결과를 정리한다."
+        },
+        {
+          "case_id": "pdf-export",
+          "work": "예제 PDF의 제목 잘림을 접수했다.",
+          "result": "기존 예제 티켓에 대면 확인 내용을 추가할 초안을 만들었다.",
+          "evidence_ref": "fixture-title",
+          "next_step": "출력 크기별 재현 결과를 모은다."
+        }
+      ]
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "pdf-export",
+    "event_id": "pdf-email",
+    "revision": 1,
+    "type": "issue.received",
+    "payload": {
+      "app_version": "demo-1.4",
+      "device_os": "demo-desktop",
+      "observed": "내보낸 예제 PDF 제목이 잘린다.",
+      "expected": "제목 전체가 표시된다.",
+      "frequency": "합성 사례 한 번 중 한 번",
+      "steps": "긴 제목의 예제 문서를 PDF로 내보낸다.",
+      "evidence_ref": "fixture-title",
+      "channel": "email"
+    }
+  },
+  {
+    "schema": "work.event.v1",
+    "classification": "synthetic",
+    "case_id": "contract-check",
+    "event_id": "example-unknown",
+    "revision": 1,
+    "type": "example.unknown",
+    "payload": {}
+  }
+]

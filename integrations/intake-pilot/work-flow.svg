@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1016" viewBox="0 0 1440 1016" role="img" aria-labelledby="title desc"><title id="title">AgentASM 개인 업무 흐름과 n8n 분기</title><desc id="desc">Jira·메일·전화·대면 접수, 개발 검증, 사람 검토, 일일 기록의 입력과 요구 필드, 생성하는 출력과 보완 조건을 보여 준다.</desc><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 1 1 L 8 5 L 1 9" fill="none" stroke="#648381" stroke-width="1.5"/></marker></defs><style>text{font-family:'Malgun Gothic','Noto Sans CJK KR',sans-serif} .strong{font-weight:700}</style>
+<rect x="0" y="0" width="1440" height="1016" rx="0" fill="#f7f8f5" stroke="none" />
+<rect x="0" y="0" width="1440" height="156" rx="0" fill="#123d3d" stroke="none" />
+<text x="52" y="64" font-size="41" fill="#ffffff" class="strong">한 건의 업무가 어디에 기록되는가</text>
+<text x="54" y="110" font-size="23" fill="#d4ece4">AgentASM  /  사용자가 확인한 업무를 n8n 입력·검증·출력 계약으로 옮긴 구조</text>
+<text x="53" y="206" font-size="24" fill="#183f3f" class="strong">입력 이벤트</text>
+<text x="433" y="206" font-size="24" fill="#183f3f" class="strong">스크립트의 검증과 분기</text>
+<text x="976" y="206" font-size="24" fill="#183f3f" class="strong">목적지별 결과</text>
+<rect x="50" y="232" width="330" height="127" rx="13" fill="#ffffff" stroke="#cbd8d2" />
+<rect x="432" y="232" width="491" height="127" rx="13" fill="#edf4ef" stroke="#c5d8cd" />
+<rect x="976" y="232" width="412" height="127" rx="13" fill="#ffffff" stroke="#cbd8d2" />
+<text x="69" y="266" font-size="22" fill="#164943" class="strong">문의 접수</text>
+<text x="69" y="300" font-size="17" fill="#203838">Jira · 메일 · 전화 · 대면</text>
+<text x="69" y="326" font-size="17" fill="#203838">문의와 재현 근거를 사건 ID에 연결</text>
+<text x="452" y="283" font-size="20" fill="#234b41" class="strong">버전·환경·증상·기대·빈도·절차·근거</text>
+<text x="452" y="315" font-size="20" fill="#234b41">기존 티켓 키 확인, 누락된 항목 반환</text>
+<text x="994" y="284" font-size="17" fill="#22413d" class="strong">Jira  /  신규 티켓 또는 기존 티켓 댓글 초안</text>
+<text x="994" y="316" font-size="17" fill="#22413d">필수값 누락  /  보완할 필드 목록</text>
+<path d="M385 296H425" fill="none" stroke="#648381" stroke-width="2.2" marker-end="url(#arrow)"/>
+<path d="M928 296H969" fill="none" stroke="#648381" stroke-width="2.2" marker-end="url(#arrow)"/>
+<rect x="50" y="379" width="330" height="127" rx="13" fill="#ffffff" stroke="#cbd8d2" />
+<rect x="432" y="379" width="491" height="127" rx="13" fill="#edf4ef" stroke="#c5d8cd" />
+<rect x="976" y="379" width="412" height="127" rx="13" fill="#ffffff" stroke="#cbd8d2" />
+<text x="69" y="413" font-size="22" fill="#164943" class="strong">개발 작업 검증 완료</text>
+<text x="69" y="447" font-size="17" fill="#203838">대상 산출물과 그 버전</text>
+<text x="69" y="473" font-size="17" fill="#203838">검증 근거와 선택적 학습 내용</text>
+<text x="452" y="430" font-size="20" fill="#234b41" class="strong">게이트·산출물 버전·검증 참조 확인</text>
+<text x="452" y="462" font-size="20" fill="#234b41">학습 내용이 있으면 두 목적지로 분기</text>
+<text x="994" y="431" font-size="17" fill="#22413d" class="strong">Hookboard  /  검증 근거 후보</text>
+<text x="994" y="463" font-size="17" fill="#22413d">TIL  /  학습 내용이 있는 건의 비공개 후보</text>
+<path d="M385 443H425" fill="none" stroke="#648381" stroke-width="2.2" marker-end="url(#arrow)"/>
+<path d="M928 443H969" fill="none" stroke="#648381" stroke-width="2.2" marker-end="url(#arrow)"/>
+<rect x="50" y="526" width="330" height="127" rx="13" fill="#ffffff" stroke="#cbd8d2" />
+<rect x="432" y="526" width="491" height="127" rx="13" fill="#edf4ef" stroke="#c5d8cd" />
+<rect x="976" y="526" width="412" height="127" rx="13" fill="#ffffff" stroke="#cbd8d2" />
+<text x="69" y="560" font-size="22" fill="#164943" class="strong">사람의 검토 결정</text>
+<text x="69" y="594" font-size="17" fill="#203838">검토자가 남긴 결정과 근거</text>
+<text x="69" y="620" font-size="17" fill="#203838">승인 또는 변경 요청</text>
+<text x="452" y="577" font-size="20" fill="#234b41" class="strong">결정값·대상 버전·검토 참조 확인</text>
+<text x="452" y="609" font-size="20" fill="#234b41">대상 버전과 사람 검토 기록을 연결</text>
+<text x="994" y="578" font-size="17" fill="#22413d" class="strong">Hookboard  /  승인 근거 접수</text>
+<text x="994" y="610" font-size="17" fill="#22413d">Hookboard  /  변경 요청 기록</text>
+<path d="M385 590H425" fill="none" stroke="#648381" stroke-width="2.2" marker-end="url(#arrow)"/>
+<path d="M928 590H969" fill="none" stroke="#648381" stroke-width="2.2" marker-end="url(#arrow)"/>
+<rect x="50" y="673" width="330" height="127" rx="13" fill="#ffffff" stroke="#cbd8d2" />
+<rect x="432" y="673" width="491" height="127" rx="13" fill="#edf4ef" stroke="#c5d8cd" />
+<rect x="976" y="673" width="412" height="127" rx="13" fill="#ffffff" stroke="#cbd8d2" />
+<text x="69" y="707" font-size="22" fill="#164943" class="strong">매일 업무 마감</text>
+<text x="69" y="741" font-size="17" fill="#203838">해당 날짜와 사건별 작업 행</text>
+<text x="69" y="767" font-size="17" fill="#203838">작업·결과·근거·다음 할 일</text>
+<text x="452" y="724" font-size="20" fill="#234b41" class="strong">날짜와 각 행의 필수값 확인</text>
+<text x="452" y="756" font-size="20" fill="#234b41">입력 순서를 유지하며 여러 사건 묶기</text>
+<text x="994" y="725" font-size="17" fill="#22413d" class="strong">Confluence  /  일지 표 초안</text>
+<text x="994" y="757" font-size="17" fill="#22413d">내용이 빈 행  /  행 번호와 보완 필드</text>
+<path d="M385 737H425" fill="none" stroke="#648381" stroke-width="2.2" marker-end="url(#arrow)"/>
+<path d="M928 737H969" fill="none" stroke="#648381" stroke-width="2.2" marker-end="url(#arrow)"/>
+<rect x="50" y="835" width="1338" height="139" rx="13" fill="#e5ece7" stroke="none" />
+<text x="72" y="873" font-size="22" fill="#164943" class="strong">모든 이벤트에 적용</text>
+<text x="72" y="909" font-size="20" fill="#24433e">사건 ID로 연결  ·  동일 배치의 중복은 건너뛰기  ·  같은 이벤트 버전의 내용 충돌 또는 허용되지 않은 입력은 차단</text>
+<text x="72" y="943" font-size="18" fill="#385850">흐름이 기다리는 지점  /  재현 정보 보완, 사람 검토, 일지 근거 입력. 각 건의 결과에서 이유와 참조를 확인할 수 있다.</text>
+</svg>

@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { routeEvent, routeBatch } from './route.mjs';
+import { classifyEvent, routeBatch } from './route.mjs';
+import { projectOntology } from './ontology.mjs';
 
 const siblings = name => new URL(name, import.meta.url);
 const { values } = parseArgs({ options: { input: { type: 'string' }, output: { type: 'string' } } });
@@ -33,7 +34,7 @@ const nodes = [
       "return events.map(value => ({ json: value && typeof value === 'object' && !Array.isArray(value) ? value : {} }));",
   }),
   node('계약 검증과 출력 생성', 'code', 2, [440, 0], {
-    jsCode: [routeEvent.toString(), routeBatch.toString(),
+    jsCode: [classifyEvent.toString(), projectOntology.toString(), routeBatch.toString(),
       'return routeBatch($input.all().map(item => item.json)).map(json => ({ json }));'].join('\n\n'),
   }),
 ];

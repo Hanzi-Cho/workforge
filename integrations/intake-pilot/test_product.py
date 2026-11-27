@@ -1,12 +1,17 @@
+import hashlib
 import json
+import re
+import sqlite3
 import subprocess
 import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 from xml.etree import ElementTree as ET
 
+from case_trace import validate_graph
 from replay import execution, terminals
 from review import draft, prepare, render
 from til_delivery import deliver
@@ -68,6 +73,20 @@ class PrivateDelivery(unittest.TestCase):
         self.assertEqual(deliver(learning(), self.root, self.day)["path"], confirmed["path"])
         self.assertEqual(self.calls, ["demo-a", "demo-b"])
 
+    def test_pre_ontology_receipt_matches_enriched_route(self):
+        route = learning()
+        old_digest = hashlib.sha256(json.dumps(route, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        first = deliver(route, self.root, self.day)
+        with closing(sqlite3.connect(self.root / ".til-state/workforge-receipts.sqlite")) as db:
+            saved = db.execute("SELECT digest FROM receipts WHERE key = ?", (route["key"],)).fetchone()
+        self.assertEqual(saved, (old_digest,))
+        enriched = {**route, "ontology": {"schema": "work.ontology.v1", "nodes": [], "edges": []}}
+        retried = deliver(enriched, self.root, "2026-11-27")
+        self.assertEqual({**first, "status": "already_verified"}, retried)
+        self.assertEqual(self.calls, ["demo-a"])
+        with self.assertRaisesRegex(ValueError, "different content"):
+            deliver({**enriched, "case_id": "another-case"}, self.root, self.day)
+
     def test_target_drift_is_reported_without_overwriting_user_edit(self):
         info = deliver(learning(), self.root, self.day)
         target = self.root / info["path"]
@@ -94,6 +113,46 @@ class PrivateDelivery(unittest.TestCase):
 
 
 class DraftFormats(unittest.TestCase):
+    def test_n8n_projection_drives_case_links_without_mixing_journal_evidence(self):
+        demo = json.loads(Path(__file__).with_name("case-demo.json").read_text())
+        disputed = {**demo[0], "event_id": "disputed", "case_id": "unconfirmed-a"}
+        demo.extend([disputed, {**disputed, "case_id": "unconfirmed-b"}])
+        js = ("import {routeBatch} from './route.mjs'; import {readFileSync} from 'node:fs'; "
+              "console.log(JSON.stringify(routeBatch(JSON.parse(readFileSync(0, 'utf8')))))")
+        proc = subprocess.run(["node", "--input-type=module", "--eval", js], cwd=Path(__file__).parent,
+                              input=json.dumps(demo), capture_output=True, check=True, text=True)
+        routes = json.loads(proc.stdout)
+        for route in routes:
+            validate_graph(route)
+        records = prepare(routes)
+        self.assertEqual([r["ontology"] for r in records], [r["ontology"] for r in routes])
+        page = render(records)
+        articles = dict(re.findall(r'<article[^>]*><h3>([^<]*)</h3>(.*?)</article>', page, re.S))
+        notes = articles["offline-notes · 합성"]
+        pdf = articles["pdf-export · 합성"]
+        self.assertIn("정보 보완 요청", notes)
+        self.assertIn("앱 버전, 발생 빈도", notes)
+        self.assertIn("TIL · 초안", notes)
+        self.assertIn("day-close · v1", notes)
+        self.assertIn("day-close · v1", pdf)
+        self.assertIn("근거 · replay-notes-v2", notes)
+        self.assertNotIn("fixture-title", notes)
+        self.assertIn("근거 · fixture-title", pdf)
+        self.assertNotIn("replay-notes-v2", pdf)
+        self.assertIn("revision_conflict", articles["업무 미확정 · 합성"])
+        self.assertNotIn("unconfirmed-a · 합성", articles)
+        self.assertNotIn("unconfirmed-b · 합성", articles)
+        links = {int(i) for i in re.findall(r'href="#route-(\d+)"', page)}
+        self.assertEqual(links, set(range(len(routes))))
+        self.assertEqual(page.count('<details id="route-'), len(routes))
+        first_graph = records[0]["ontology"]
+        first_graph["nodes"][0]["label"] = '<img src=x onerror="marker()">'
+        self.assertNotIn("<img", render(records))
+        self.assertIn("&lt;img", render(records))
+        first_graph["edges"][0]["to"] = "missing-node"
+        with self.assertRaisesRegex(ValueError, "Invalid ontology edge"):
+            validate_graph(routes[0])
+
     def test_jira_update_keeps_the_existing_issue_and_uses_comment_adf(self):
         payload = {"observed": "x < y", "issue_key": "DEMO-13", "steps": "Try sample"}
         result = draft({"action": "draft_update", "payload": payload})

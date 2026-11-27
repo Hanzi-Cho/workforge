@@ -45,7 +45,10 @@ def deliver(route, root, day):
     state = root / ".til-state"
     state.mkdir(exist_ok=True, mode=0o700)
     # Bind the event to its first destination day before the importer can write.
-    fingerprint = hashlib.sha256(json.dumps(route, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    # The ontology describes the routing decision and can evolve independently
+    # of a delivery. Keep the pre-ontology receipt identity on replay.
+    delivery_fields = {key: value for key, value in route.items() if key != "ontology"}
+    fingerprint = hashlib.sha256(json.dumps(delivery_fields, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     with closing(sqlite3.connect(state / "workforge-receipts.sqlite", timeout=40)) as db:
         db.execute("""CREATE TABLE IF NOT EXISTS receipts
                       (key TEXT PRIMARY KEY, digest TEXT NOT NULL, day TEXT NOT NULL,

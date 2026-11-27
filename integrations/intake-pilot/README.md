@@ -19,7 +19,7 @@
 Node.js 22 이상에서 실행한다. 빌더는 스크립트의 라우팅 함수와 합성 입력을 n8n JSON에 넣는다.
 
 ```sh
-node --test route.test.mjs
+node --test route.test.mjs ontology.test.mjs
 node build.mjs
 ```
 
@@ -56,3 +56,15 @@ python3 replay.py --out "$HOME/agentasm-review" --til-root /path/to/til --date 2
 ```sh
 python3 -m unittest -v test_product
 ```
+
+## 사건별 업무 흐름 데모
+
+![업무 이벤트, 검증과 목적지별 출력](work-flow.svg)
+
+[업무 온톨로지 계약](ontology-contract.md)은 각 출력에서 사건·이벤트·근거·산출물 버전·검토·일지 행을 어떻게 연결하는지 정의한다. [두 사건의 합성 입력](case-demo.json)은 전화 문의 한 건의 정보 보완, Jira 티켓 연결, 두 버전의 검증·사람 검토와 별도 PDF 문의를 같은 날의 일지에 연결한다. 고객이나 회사 자료를 쓰지 않는다.
+
+```sh
+python3 replay.py --events case-demo.json --out "$HOME/agentasm-case-demo"
+```
+
+출력 폴더의 `review.html`을 열고 업무 선택에서 `offline-notes`를 고른다. 전화 접수 v1의 누락 필드와 v2의 티켓 초안, 변경 요청을 받은 산출물 v1과 승인을 받은 v2를 차례로 확인한다. `pdf-export`를 선택하면 같은 일지에서 이 사건의 근거를 따로 볼 수 있다. 해당 출력 링크를 열면 목적지 초안과 개념 간 관계를 볼 수 있다. 실제 TIL 가져오기·재조회까지 시험하려면 위의 `--til-root`와 `--date` 옵션을 함께 지정한다.

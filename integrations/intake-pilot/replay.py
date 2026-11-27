@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 
+from case_trace import validate_graph
 from review import prepare, render, save
 
 HERE = Path(__file__).resolve().parent
@@ -70,6 +71,8 @@ def terminals(workflow, result):
             raise ValueError(f"Terminal differs from router: {action}")
     if any(r.get("schema") != "work.route.v1" or r.get("action") not in actions for r in routed):
         raise ValueError("Unexpected output schema or unhandled branch")
+    for route in routed:
+        validate_graph(route)
     return routed
 
 
